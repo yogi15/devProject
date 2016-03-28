@@ -4,14 +4,17 @@ import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
 
 import util.AccessMechanismUtil;
+import util.ClassInstantiateUtil;
 import util.commonUTIL;
 
 import dbSQL.AttributSQL;
 import dbSQL.B2BConfigSQL;
+import dbSQL.BaseSQL;
 import dbSQL.BookSQL;
 import dbSQL.CountrySQL;
 import dbSQL.CurrencyDefaultSQL;
@@ -40,6 +43,7 @@ import dbSQL.WindowTableModelMappingSQL;
 import dbSQL.dsSQL;
 import beans.Attribute;
 import beans.B2BConfig;
+import beans.BaseBean;
 import beans.Book;
 import beans.BookAttribute;
 import beans.Country;
@@ -53,7 +57,7 @@ import beans.Holiday;
 import beans.JTableMapping;
 import beans.LEAttribute;
 import beans.LeContacts;
-import beans.LegalEntity;
+import beans.CounterParty;
 import beans.LiquidationConfig;
 import beans.MenuConfiguration;
 import beans.MessageConfig;
@@ -67,179 +71,180 @@ import beans.WindowSheet;
 import beans.WindowTableModelMapping;
 
 public class ReferenceDataImp implements RemoteReferenceData {
-	
-	private Vector<LEAttribute> processLEAttribues(LegalEntity le, int id) {
-		
+
+	private Vector<LEAttribute> processLEAttribues(CounterParty le, int id) {
+
 		Vector<LEAttribute> leAttrVec = new Vector<LEAttribute>();
-		
+
 		String attributes = le.getAttributes();
-		
+
 		if (!commonUTIL.isEmpty(attributes)) {
-			
-			String atttoken [] = attributes.trim().split(";"); 
-			
-			for(int i =0;i<atttoken.length;i++) {
+
+			String atttoken[] = attributes.trim().split(";");
+
+			for (int i = 0; i < atttoken.length; i++) {
 				String att = (String) atttoken[i];
-				if(att.contains("=")) {
-						String attvalue = att.substring(att.indexOf('=')+1, att.length());
-						String attnameName = att.substring(0, att.indexOf('='));
-						LEAttribute leAttrBean = new LEAttribute();
-						leAttrBean.setId(id);
-						leAttrBean.setName(attnameName);
-						leAttrBean.setValue(attvalue);
-						
-						leAttrVec.add(leAttrBean);
+				if (att.contains("=")) {
+					String attvalue = att.substring(att.indexOf('=') + 1,
+							att.length());
+					String attnameName = att.substring(0, att.indexOf('='));
+					LEAttribute leAttrBean = new LEAttribute();
+					leAttrBean.setId(id);
+					leAttrBean.setName(attnameName);
+					leAttrBean.setValue(attvalue);
+
+					leAttrVec.add(leAttrBean);
 				}
 			}
-			
+
 		}
-		
-		return leAttrVec;	
+
+		return leAttrVec;
 	}
-	
+
 	private Vector<BookAttribute> processBookAttribues(Book book, int id) {
-		
+
 		Vector<BookAttribute> bookAttrVec = new Vector<BookAttribute>();
-		
+
 		String attributes = book.getAttributes();
-		
+
 		if (!commonUTIL.isEmpty(attributes)) {
-			
-			String atttoken [] = attributes.trim().split(";"); 
-			
-			for(int i =0;i<atttoken.length;i++) {
+
+			String atttoken[] = attributes.trim().split(";");
+
+			for (int i = 0; i < atttoken.length; i++) {
 				String att = (String) atttoken[i];
-				if(att.contains("=")) {
-					
-						String attvalue = att.substring(att.indexOf('=')+1, att.length());
-						String attnameName = att.substring(0, att.indexOf('='));
-					
-						BookAttribute bookAttrBean = new BookAttribute();
-						bookAttrBean.setId(id);
-						bookAttrBean.setName(attnameName);
-						bookAttrBean.setValue(attvalue);
-						
-						bookAttrVec.add(bookAttrBean);
+				if (att.contains("=")) {
+
+					String attvalue = att.substring(att.indexOf('=') + 1,
+							att.length());
+					String attnameName = att.substring(0, att.indexOf('='));
+
+					BookAttribute bookAttrBean = new BookAttribute();
+					bookAttrBean.setId(id);
+					bookAttrBean.setName(attnameName);
+					bookAttrBean.setValue(attvalue);
+
+					bookAttrVec.add(bookAttrBean);
 				}
 			}
-			
+
 		}
-		return bookAttrVec;	
+		return bookAttrVec;
 	}
-	
+
 	private String getBookAttributesString(Collection<BookAttribute> bookAttrVec) {
-		
+
 		Iterator<BookAttribute> itr = bookAttrVec.iterator();
-	    StringBuffer attribute = new StringBuffer();  
-		
-	    while(itr.hasNext()) {
-			
+		StringBuffer attribute = new StringBuffer();
+
+		while (itr.hasNext()) {
+
 			BookAttribute element = (BookAttribute) itr.next();
-			
-			attribute.append(element.getName())
-			.append("=")
-			.append(element.getValue())
-			.append(";");
-	      
+
+			attribute.append(element.getName()).append("=")
+					.append(element.getValue()).append(";");
+
 		}
-		
+
 		return attribute.toString();
 	}
-	
+
 	private String getLEAttributesString(Collection<LEAttribute> leAttrVec) {
-		
+
 		Iterator<LEAttribute> itr = leAttrVec.iterator();
-	    StringBuffer attribute = new StringBuffer();  
-		
-	    while(itr.hasNext()) {
-			
-	    	LEAttribute element = (LEAttribute) itr.next();
-			
-			attribute.append(element.getName())
-			.append("=")
-			.append(element.getValue())
-			.append(";");
-	      
+		StringBuffer attribute = new StringBuffer();
+
+		while (itr.hasNext()) {
+
+			LEAttribute element = (LEAttribute) itr.next();
+
+			attribute.append(element.getName()).append("=")
+					.append(element.getValue()).append(";");
+
 		}
-		
+
 		return attribute.toString();
 	}
 
 	@Override
-	public void removeLe(LegalEntity le) throws RemoteException {
+	public void removeLe(CounterParty le) throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 		Connection con = dsSQL.getConn();
 		boolean isDeleted = LegalEntitySQL.delete(le, con);
 		int i = 0;
-		
+
 		if (isDeleted) {
 
 			Vector<LEAttribute> leAttrVec = processLEAttribues(le, le.getId());
-			
-			boolean isAttributeDeleted = AttributSQL.deleteLEAttribute(leAttrVec, con);
-			
+
+			boolean isAttributeDeleted = AttributSQL.deleteLEAttribute(
+					leAttrVec, con);
+
 			if (!isAttributeDeleted) {
-				 
+
 				i = -2;
-			
-			} 
+
+			}
 		} else {
-			
+
 			i = -2;
 		}
-	
+
 	}
 
 	@Override
 	public Vector getSearchCriteria() throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 		return (Vector) SearchCriteriaSQL.selectSearchCriteria(dsSQL.getConn());
-		
+
 	}
+
 	@Override
 	public Vector getSearchColumn(String type) throws RemoteException {
 		// TODO Auto-generated method stub
-		
-		return (Vector) SearchCriteriaSQL.selectSearchColumn(type,dsSQL.getConn());
-		
+
+		return (Vector) SearchCriteriaSQL.selectSearchColumn(type,
+				dsSQL.getConn());
+
 	}
-	
+
 	@Override
 	public int saveBook(Book book) throws RemoteException {
-		
+
 		Connection con = dsSQL.getConn();
 		int id = BookSQL.save(book, con);
-			
-		if ( id > 0 && !book.getAttributes().equals("")) {
-			
+
+		if (id > 0 && !book.getAttributes().equals("")) {
+
 			boolean isAttributeSaved = false;
 			Vector<BookAttribute> bookAttrVec = processBookAttribues(book, id);
-			
+
 			isAttributeSaved = AttributSQL.saveBookAttribute(bookAttrVec, con);
-			
+
 			if (!isAttributeSaved) {
-				 id = -2;
+				id = -2;
 			}
-			
+
 		}
-		
+
 		return id;
 	}
 
 	@Override
-	public int saveLe(LegalEntity le) throws RemoteException {
-		
+	public int saveLe(CounterParty le) throws RemoteException {
+
 		Connection con = dsSQL.getConn();
 		int id = 0;
-		
-		if(!isExistLEwithName(le)) {
-			
+
+		if (!isExistLEwithName(le)) {
+
 			id = LegalEntitySQL.save(le, dsSQL.getConn());
-		
+
 		} else {
-			
+
 			id = -1;
 		}
 
@@ -247,273 +252,283 @@ public class ReferenceDataImp implements RemoteReferenceData {
 
 			Vector<LEAttribute> leAttrVec = processLEAttribues(le, id);
 
-			boolean isAttributeSaved = AttributSQL.saveLEAttribute(leAttrVec, con);
+			boolean isAttributeSaved = AttributSQL.saveLEAttribute(leAttrVec,
+					con);
 
 			if (!isAttributeSaved) {
 
 				id = -2;
 
 			}
-		} 
-			
-		  return id;
+		}
+
+		return id;
 	}
 
 	@Override
 	public Book selectBook(Book book) throws RemoteException {
-		
+
 		Connection con = dsSQL.getConn();
-		Book  bookObj = BookSQL.selectBook(book.getBookno(), con);
-		
+		Book bookObj = BookSQL.selectBook(book.getBookno(), con);
+
 		if (bookObj != null) {
-			
-			Collection<BookAttribute> bookAttrVec = AttributSQL.selectBookAttribute(bookObj.getBookno(), con);
-			
+
+			Collection<BookAttribute> bookAttrVec = AttributSQL
+					.selectBookAttribute(bookObj.getBookno(), con);
+
 			String attributes = getBookAttributesString(bookAttrVec);
-			
+
 			bookObj.setAttributes(attributes);
 		}
-		
+
 		return bookObj;
 	}
-	
+
 	@Override
 	public Vector getBookWhere(String sql) throws RemoteException {
-		
+
 		Connection con = dsSQL.getConn();
-		Collection<Book> bookVec =  BookSQL.selectbookWhere(sql, con);
+		Collection<Book> bookVec = BookSQL.selectbookWhere(sql, con);
 		Vector<Book> returnBookVec = new Vector<Book>();
-		
+
 		int size = bookVec.size();
-		
+
 		String attributes = "";
-		
+
 		Iterator<Book> itr = bookVec.iterator();
-	    		
-	    while(itr.hasNext()) {
-			
-	    	Book element = (Book) itr.next();
-	    	
-			Collection<BookAttribute> bookAttrVec = AttributSQL.selectBookAttribute(
-					element.getBookno(), con);
-			
+
+		while (itr.hasNext()) {
+
+			Book element = (Book) itr.next();
+
+			Collection<BookAttribute> bookAttrVec = AttributSQL
+					.selectBookAttribute(element.getBookno(), con);
+
 			attributes = getBookAttributesString(bookAttrVec);
-			
+
 			element.setAttributes(attributes);
 			returnBookVec.add(element);
 		}
-		
-	    return returnBookVec;
+
+		return returnBookVec;
 	}
-	
+
 	@Override
-	public LegalEntity selectLE(int id) throws RemoteException {
-		
+	public CounterParty selectLE(int id) throws RemoteException {
+
 		Connection con = dsSQL.getConn();
-		LegalEntity le = null;
-		
-		Vector legalEntitys = (Vector) LegalEntitySQL.selectLegalEntity(id, con);
-		
-		if(legalEntitys != null && legalEntitys.size() >0 ) {
-			
-			le =   (LegalEntity) legalEntitys.elementAt(0);
-			
-			Collection<LEAttribute> leAttrVec = AttributSQL.selectLEAttribute(le.getId(), con);
-			
+		CounterParty le = null;
+
+		Vector legalEntitys = (Vector) LegalEntitySQL
+				.selectLegalEntity(id, con);
+
+		if (legalEntitys != null && legalEntitys.size() > 0) {
+
+			le = (CounterParty) legalEntitys.elementAt(0);
+
+			Collection<LEAttribute> leAttrVec = AttributSQL.selectLEAttribute(
+					le.getId(), con);
+
 			String attributes = getLEAttributesString(leAttrVec);
-			
+
 			le.setAttributes(attributes);
 		}
-		
-		
+
 		return le;
-		
-		
+
 	}
+
 	@Override
-	public boolean isExistLEwithName(LegalEntity le) throws RemoteException {
+	public boolean isExistLEwithName(CounterParty le) throws RemoteException {
 		boolean flag = false;
-		String sql = " alias = '"+le.getAlias() +"'";
+		String sql = " alias = '" + le.getAlias() + "'";
 		Vector vec = (Vector) selectLEonWhereClause(sql);
-		if(vec == null || vec.isEmpty())
-			return flag ;
+		if (vec == null || vec.isEmpty())
+			return flag;
 		flag = true;
 		return flag;
-				
-		
+
 	}
-	
-	
+
 	@Override
 	public boolean updateBook(Book book) throws RemoteException {
-		
+
 		Connection con = dsSQL.getConn();
-		
+
 		boolean isBookUpdated = BookSQL.update(book, con);
-		
+
 		if (isBookUpdated && !book.getAttributes().equals("")) {
-			
-			Vector<BookAttribute> updateBookAttribute = processBookAttribues(book, book.getBookno());
-			
-			Collection<BookAttribute> isAttributeAlreadySaved = AttributSQL.selectBookAttribute(book.getBookno(), con);
-			
+
+			Vector<BookAttribute> updateBookAttribute = processBookAttribues(
+					book, book.getBookno());
+
+			Collection<BookAttribute> isAttributeAlreadySaved = AttributSQL
+					.selectBookAttribute(book.getBookno(), con);
+
 			if (isAttributeAlreadySaved.size() > 0) {
-			
-				boolean isAttributeUpdated = AttributSQL.updateBookAttribute(updateBookAttribute, con);
-				
+
+				boolean isAttributeUpdated = AttributSQL.updateBookAttribute(
+						updateBookAttribute, con);
+
 			} else {
-				
-				boolean isAttributeSaved= AttributSQL.saveBookAttribute(updateBookAttribute, con);
+
+				boolean isAttributeSaved = AttributSQL.saveBookAttribute(
+						updateBookAttribute, con);
 			}
-			
-			
+
 		}
-		
+
 		return isBookUpdated;
 	}
 
 	@Override
-	public boolean updateLe(LegalEntity le) throws RemoteException {
-		
+	public boolean updateLe(CounterParty le) throws RemoteException {
+
 		Connection con = dsSQL.getConn();
-		
-	//	if(!isExistLEwithName(le))
-		boolean isLEUpdated =  LegalEntitySQL.update(le, dsSQL.getConn());
-		
+
+		// if(!isExistLEwithName(le))
+		boolean isLEUpdated = LegalEntitySQL.update(le, dsSQL.getConn());
+
 		if (isLEUpdated && !le.getAttributes().equals("")) {
-			
-			Vector<LEAttribute> updateLEAttribute = processLEAttribues(le, le.getId());
-			
-			Collection<LEAttribute> isAttributeAlreadySaved = AttributSQL.selectLEAttribute(le.getId(), con);
-			
+
+			Vector<LEAttribute> updateLEAttribute = processLEAttribues(le,
+					le.getId());
+
+			Collection<LEAttribute> isAttributeAlreadySaved = AttributSQL
+					.selectLEAttribute(le.getId(), con);
+
 			if (isAttributeAlreadySaved.size() > 0) {
-				
-				boolean isAttributeUpdated = AttributSQL.updateLEAttribute(updateLEAttribute, con);
-				
+
+				boolean isAttributeUpdated = AttributSQL.updateLEAttribute(
+						updateLEAttribute, con);
+
 			} else {
-				
-				boolean isAttributeUpdated = AttributSQL.saveLEAttribute(updateLEAttribute, con);
-				
+
+				boolean isAttributeUpdated = AttributSQL.saveLEAttribute(
+						updateLEAttribute, con);
+
 			}
-			
-			
-			
+
 		}
-		
+
 		return isLEUpdated;
-		
- 	//	return false;
+
+		// return false;
 	}
 
 	@Override
 	public void removeBook(Book book) throws RemoteException {
-		
+
 		Connection con = dsSQL.getConn();
-		
+
 		boolean isBookDeleted = BookSQL.delete(book, con);
-		
+
 		if (isBookDeleted) {
-			
-			Vector<BookAttribute> deleteBookAttrVec = processBookAttribues(book, book.getBookno());
-			
-			boolean isAttributeDeleted = AttributSQL.deleteBookAttribute(deleteBookAttrVec, con);
-		}		
-		
+
+			Vector<BookAttribute> deleteBookAttrVec = processBookAttribues(
+					book, book.getBookno());
+
+			boolean isAttributeDeleted = AttributSQL.deleteBookAttribute(
+					deleteBookAttrVec, con);
+		}
+
 	}
 
 	@Override
 	public boolean removeSDI(Sdi sdi) throws RemoteException {
-		
+
 		return SdiSQL.delete(sdi, dsSQL.getConn());
 	}
 
 	@Override
 	public Sdi saveSDI(Sdi sdi) throws RemoteException {
-		
-		if(sdi.getId() == 0)
-		  return SdiSQL.save(sdi, dsSQL.getConn()); 
-		else 
+
+		if (sdi.getId() == 0)
+			return SdiSQL.save(sdi, dsSQL.getConn());
+		else
 			return updateSDI(sdi);
 	}
-	
+
 	@Override
 	public Sdi selectSDI(Sdi sdi) throws RemoteException {
-		
+
 		Vector Sdis = (Vector) SdiSQL.selectSDI(sdi.getId(), dsSQL.getConn());
-		if(Sdis.isEmpty())
+		if (Sdis.isEmpty())
 			return null;
 		return (Sdi) Sdis.elementAt(0);
 	}
 
 	@Override
 	public Sdi updateSDI(Sdi sdi) throws RemoteException {
-		
+
 		return SdiSQL.update(sdi, dsSQL.getConn());
-		
+
 	}
 
 	@Override
 	public int getMAXLEID() throws RemoteException {
-		
+
 		return BookSQL.selectMaxID(dsSQL.getConn());
-		
+
 	}
 
 	@Override
 	public Collection selectAllLs() throws RemoteException {
-		
+
 		Connection con = dsSQL.getConn();
-		Vector<LegalEntity> returnLE = new Vector<LegalEntity>();
-		
-		Collection<LegalEntity> allBooks =  LegalEntitySQL.selectALL(con);
-		
-		Iterator<LegalEntity> itr = allBooks.iterator();
-	    
-	    while(itr.hasNext()) {
-			
-	    	LegalEntity element = (LegalEntity) itr.next();
-	    	
-	    	Collection<LEAttribute> leAttrVec = AttributSQL.selectALLLEAttribute(con);
-	    	
-	    	element.setAttributes(getLEAttributesString(leAttrVec));
-	    	
-	    	returnLE.add(element);
-	    	
-	    }
-	    
-	    return returnLE;
-	    
+		Vector<CounterParty> returnLE = new Vector<CounterParty>();
+
+		Collection<CounterParty> allBooks = LegalEntitySQL.selectALL(con);
+
+		Iterator<CounterParty> itr = allBooks.iterator();
+
+		while (itr.hasNext()) {
+
+			CounterParty element = (CounterParty) itr.next();
+
+			Collection<LEAttribute> leAttrVec = AttributSQL
+					.selectALLLEAttribute(con);
+
+			element.setAttributes(getLEAttributesString(leAttrVec));
+
+			returnLE.add(element);
+
+		}
+
+		return returnLE;
+
 	}
 
 	@Override
 	public Collection selectALLBooks() throws RemoteException {
-		
+
 		Connection con = dsSQL.getConn();
 		Vector<Book> returnBooks = new Vector<Book>();
-		Collection<Book> allBooks =  BookSQL.selectALL(con);
-		
+		Collection<Book> allBooks = BookSQL.selectALL(con);
+
 		Iterator<Book> itr = allBooks.iterator();
-	    
-	    while(itr.hasNext()) {
-			
-	    	Book element = (Book) itr.next();
-	    	
-	    	Collection<BookAttribute> bookAttrVec = AttributSQL.selectBookAttribute(element.getBookno(), con);
-	    	
-	    	element.setAttributes(getBookAttributesString(bookAttrVec));
-	    	
-	    	returnBooks.add(element);
-	    	
-	    }
-	    
-	    return returnBooks;
+
+		while (itr.hasNext()) {
+
+			Book element = (Book) itr.next();
+
+			Collection<BookAttribute> bookAttrVec = AttributSQL
+					.selectBookAttribute(element.getBookno(), con);
+
+			element.setAttributes(getBookAttributesString(bookAttrVec));
+
+			returnBooks.add(element);
+
+		}
+
+		return returnBooks;
 	}
 
 	@Override
 	public void removeStartUPData(StartUPData data) throws RemoteException {
 		// TODO Auto-generated method stub
 		StartUPDataSQL.delete(data, dsSQL.getConn());
-		
+
 	}
 
 	@Override
@@ -527,26 +542,28 @@ public class ReferenceDataImp implements RemoteReferenceData {
 	public Collection selectALLStartUPDatas() throws RemoteException {
 		// TODO Auto-generated method stub
 		return StartUPDataSQL.selectALL(dsSQL.getConn());
-		
+
 	}
 
 	@Override
 	public Collection selectAllStartUPData() throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 		return StartUPDataSQL.selectALL(dsSQL.getConn());
 	}
 
 	@Override
-	public Collection selectStartUPData(StartUPData data) throws RemoteException {
+	public Collection selectStartUPData(StartUPData data)
+			throws RemoteException {
 		// TODO Auto-generated method stub
-		return StartUPDataSQL.selectStartUPData(data.getName(), dsSQL.getConn());
+		return StartUPDataSQL
+				.selectStartUPData(data.getName(), dsSQL.getConn());
 	}
 
 	@Override
 	public void updateStartUPData(StartUPData data) throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -564,7 +581,7 @@ public class ReferenceDataImp implements RemoteReferenceData {
 	@Override
 	public int saveUser(Users user) throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 		String salt = null;
 		try {
 			salt = AccessMechanismUtil.getSalt();
@@ -572,12 +589,11 @@ public class ReferenceDataImp implements RemoteReferenceData {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		user.setPassword(AccessMechanismUtil.getPasswordWithSalt(user.getPassword(), salt));
+
+		user.setPassword(AccessMechanismUtil.getPasswordWithSalt(
+				user.getPassword(), salt));
 		return UsersSQL.save(user, salt, dsSQL.getConn());
 	}
-
-	
 
 	@Override
 	public Collection selectALLUsers() throws RemoteException {
@@ -585,39 +601,37 @@ public class ReferenceDataImp implements RemoteReferenceData {
 		return UsersSQL.selectALL(dsSQL.getConn());
 	}
 
-	
-	
-	// can be handel thorugh procedure 
-	
+	// can be handel thorugh procedure
+
 	@Override
 	public int saveWF(WFConfig wfc) throws RemoteException {
 		// TODO Auto-generated method stub
-	//	if(!wfc.getCurrentStatus().equalsIgnoreCase(wfc.getOrgStatus())) 
-			
-		//if(checkReverseTransitionOnWfc(wfc,dsSQL.getConn()) == 1) 
-			//return -1;
-		
+		// if(!wfc.getCurrentStatus().equalsIgnoreCase(wfc.getOrgStatus()))
+
+		// if(checkReverseTransitionOnWfc(wfc,dsSQL.getConn()) == 1)
+		// return -1;
+
 		return WFConfigSQL.save(wfc, dsSQL.getConn());
-		//return -1;
+		// return -1;
 	}
 
-	
-	
-	
-	
 	private int checkReverseTransitionOnWfc(WFConfig wfc, Connection conn) {
 		// TODO Auto-generated method stub
 		int i = 0;
-		String sql = " orgstatus='"+wfc.getOrgStatus() + "'  and currentstatus='"+wfc.getCurrentStatus() + "' and productsubtype='" + wfc.getProductSubType() + "' and producttype='"+ wfc.getProductType() +"' and type ='" + wfc.getType() + "'";
-		Vector checkRev = (Vector)  WFConfigSQL.selectWhere(sql, dsSQL.getConn());
-		if(checkRev == null || checkRev.isEmpty()) {
+		String sql = " orgstatus='" + wfc.getOrgStatus()
+				+ "'  and currentstatus='" + wfc.getCurrentStatus()
+				+ "' and productsubtype='" + wfc.getProductSubType()
+				+ "' and producttype='" + wfc.getProductType()
+				+ "' and type ='" + wfc.getType() + "'";
+		Vector checkRev = (Vector) WFConfigSQL
+				.selectWhere(sql, dsSQL.getConn());
+		if (checkRev == null || checkRev.isEmpty()) {
 			i = 0;
 		} else {
 			i = 1;
 		}
 		return i;
-		
-		
+
 	}
 
 	@Override
@@ -642,24 +656,27 @@ public class ReferenceDataImp implements RemoteReferenceData {
 	@Override
 	public int saveTask(Task t) throws RemoteException {
 		// TODO Auto-generated method stub
-		return TaskSQL.save(t,  dsSQL.getConn());
+		return TaskSQL.save(t, dsSQL.getConn());
 	}
 
 	@Override
 	public Collection selectALLtasks(Task t) throws RemoteException {
 		// TODO Auto-generated method stub
-		 return TaskSQL.selectTask(t.getId(),  dsSQL.getConn());
+		return TaskSQL.selectTask(t.getId(), dsSQL.getConn());
 	}
 
 	@Override
 	public Users selectUser(Users user) throws RemoteException {
 		// TODO Auto-generated method stub
-		return UsersSQL.selectUsers(user.getUser_name(), user.getPassword(), dsSQL.getConn());
+		return UsersSQL.selectUsers(user.getUser_name(), user.getPassword(),
+				dsSQL.getConn());
 	}
+
 	@Override
-	public Users selectUser(Users user,String group) throws RemoteException {
+	public Users selectUser(Users user, String group) throws RemoteException {
 		// TODO Auto-generated method stub
-		return UsersSQL.selectUsers(user.getUser_name(), user.getPassword(),group, dsSQL.getConn());
+		return UsersSQL.selectUsers(user.getUser_name(), user.getPassword(),
+				group, dsSQL.getConn());
 	}
 
 	@Override
@@ -684,40 +701,44 @@ public class ReferenceDataImp implements RemoteReferenceData {
 	@Override
 	public Collection selectALLAttribute() throws RemoteException {
 		// TODO Auto-generated method stub
-		return  AttributSQL.selectALL(dsSQL.getConn());
+		return AttributSQL.selectALL(dsSQL.getConn());
 	}
 
 	@Override
 	public Collection selectAttribute(Attribute att) throws RemoteException {
 		// TODO Auto-generated method stub
-		return  AttributSQL.selectAttribute(att.getId(), dsSQL.getConn());
+		return AttributSQL.selectAttribute(att.getId(), dsSQL.getConn());
 	}
+
 	@Override
-	public Collection selectLEonWhereClause(String whereClause) throws RemoteException {
-		
+	public Collection selectLEonWhereClause(String whereClause)
+			throws RemoteException {
+
 		Connection con = dsSQL.getConn();
-		Vector<LegalEntity> returnLE = new Vector<LegalEntity>();
-		
-		Collection<LegalEntity> le =  LegalEntitySQL.selectLEOnWhereClause(whereClause,con);
-		
-		Iterator<LegalEntity> itr = le.iterator();
-	    
-	    while(itr.hasNext()) {
-			
-	    	LegalEntity element = (LegalEntity) itr.next();
-	    	
-	    	Collection<LEAttribute> leAttrVec = AttributSQL.selectALLLEAttribute(con);
-	    	
-	    	element.setAttributes(getLEAttributesString(leAttrVec));
-	    	
-	    	returnLE.add(element);
-	    	
-	    }
-	    
-	    return returnLE;
+		Vector<CounterParty> returnLE = new Vector<CounterParty>();
+
+		Collection<CounterParty> le = LegalEntitySQL.selectLEOnWhereClause(
+				whereClause, con);
+
+		Iterator<CounterParty> itr = le.iterator();
+
+		while (itr.hasNext()) {
+
+			CounterParty element = (CounterParty) itr.next();
+
+			Collection<LEAttribute> leAttrVec = AttributSQL
+					.selectALLLEAttribute(con);
+
+			element.setAttributes(getLEAttributesString(leAttrVec));
+
+			returnLE.add(element);
+
+		}
+
+		return returnLE;
 
 	}
-	
+
 	@Override
 	public Collection selectWhereAttribute(String sql) throws RemoteException {
 		// TODO Auto-generated method stub
@@ -731,34 +752,39 @@ public class ReferenceDataImp implements RemoteReferenceData {
 	}
 
 	@Override
-	public boolean deleteLE(LegalEntity deleteLegalEntity) throws RemoteException {
+	public boolean deleteLE(CounterParty deleteLegalEntity)
+			throws RemoteException {
 
 		Connection con = dsSQL.getConn();
-		
-		boolean isLeDeleted = LegalEntitySQL.delete( deleteLegalEntity, con);
-		
+
+		boolean isLeDeleted = LegalEntitySQL.delete(deleteLegalEntity, con);
+
 		if (isLeDeleted && !deleteLegalEntity.getAttributes().equals("")) {
-			
-			Vector<LEAttribute> deleteLEAttrVec = processLEAttribues(deleteLegalEntity, deleteLegalEntity.getId());
-			
-			boolean isAttributeDeleted = AttributSQL.deleteLEAttribute(deleteLEAttrVec, con);
-			
+
+			Vector<LEAttribute> deleteLEAttrVec = processLEAttribues(
+					deleteLegalEntity, deleteLegalEntity.getId());
+
+			boolean isAttributeDeleted = AttributSQL.deleteLEAttribute(
+					deleteLEAttrVec, con);
+
 		}
 		return isLeDeleted;
 	}
 
 	@Override
 	public boolean deleteBook(Book book) throws RemoteException {
-		
+
 		Connection con = dsSQL.getConn();
-		
+
 		boolean isBookDeleted = BookSQL.delete(book, con);
-		
+
 		if (isBookDeleted && !book.getAttributes().equals("")) {
-			
-			Vector<BookAttribute> deleteBookAttrVec = processBookAttribues(book, book.getBookno());
-			
-			boolean isAttributeDeleted = AttributSQL.deleteBookAttribute(deleteBookAttrVec, con);
+
+			Vector<BookAttribute> deleteBookAttrVec = processBookAttribues(
+					book, book.getBookno());
+
+			boolean isAttributeDeleted = AttributSQL.deleteBookAttribute(
+					deleteBookAttrVec, con);
 		}
 		return isBookDeleted;
 	}
@@ -766,30 +792,28 @@ public class ReferenceDataImp implements RemoteReferenceData {
 	@Override
 	public boolean deleteUser(Users deleteUsers) throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 		boolean isUserDeleted = UsersSQL.delete(deleteUsers, dsSQL.getConn());
-		
+
 		return isUserDeleted;
 	}
 
-	// can be handled through procedure. 
-	
+	// can be handled through procedure.
+
 	@Override
-	public boolean removeWF(WFConfig deleteWFConfig)  throws RemoteException  {
+	public boolean removeWF(WFConfig deleteWFConfig) throws RemoteException {
 		return WFConfigSQL.delete(deleteWFConfig, dsSQL.getConn());
 	}
 
 	@Override
 	public Collection selectWFWhere(String sql) throws RemoteException {
 		// TODO Auto-generated method stub
-	//	String sqls = sql;
+		// String sqls = sql;
 		Vector v1 = (Vector) WFConfigSQL.selectWhere(sql, dsSQL.getConn());
-	//	
-		
+		//
+
 		return v1;
 	}
-	
-	
 
 	@Override
 	public boolean updateCurrencyDefault(CurrencyDefault currencyD)
@@ -802,36 +826,39 @@ public class ReferenceDataImp implements RemoteReferenceData {
 	public void removeCurrencyDefault(CurrencyDefault currencyD)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public CurrencyDefault selectCurrencyDefault(CurrencyDefault currencyD)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		return CurrencyDefaultSQL.selectcurrencyDefault(currencyD.getCurrency_code(), dsSQL.getConn());
-		
+		return CurrencyDefaultSQL.selectcurrencyDefault(
+				currencyD.getCurrency_code(), dsSQL.getConn());
+
 	}
+
 	@Override
 	public CurrencyDefault selectCurrencyDefault(String currencyISO)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		return CurrencyDefaultSQL.selectcurrencyDefault(currencyISO, dsSQL.getConn());
-		
+		return CurrencyDefaultSQL.selectcurrencyDefault(currencyISO,
+				dsSQL.getConn());
+
 	}
+
 	@Override
 	public void saveCurrencyDefault(CurrencyDefault currencyD)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		
-		
+
 	}
 
 	@Override
 	public Vector selectALLCurrencyDefault() throws RemoteException {
 		// TODO Auto-generated method stub
 		return (Vector) CurrencyDefaultSQL.selectALL(dsSQL.getConn());
-		
+
 	}
 
 	@Override
@@ -857,37 +884,38 @@ public class ReferenceDataImp implements RemoteReferenceData {
 		// TODO Auto-generated method stub
 		return HolidaySQL.selectALL(dsSQL.getConn());
 	}
-	
+
 	@Override
-	public int checkHolidayOrWeekend(String currency, String checkDate) throws RemoteException {
+	public int checkHolidayOrWeekend(String currency, String checkDate)
+			throws RemoteException {
 		// TODO Auto-generated method stub
-		return HolidaySQL.checkHolidayOrWeekend(currency,checkDate, dsSQL.getConn());
+		return HolidaySQL.checkHolidayOrWeekend(currency, checkDate,
+				dsSQL.getConn());
 	}
-	
 
 	@Override
 	public boolean saveCurrencyPair(CurrencyPair cp) throws RemoteException {
 		// TODO Auto-generated method stub
-		 String sql = " quoting_currency = '"+cp.getQuoting_currency() + "' and primary_currency = '" + cp.getPrimary_currency() +"'";
-		 CurrencyPair cp1 =CurrencyPairSQL.select(sql,  dsSQL.getConn());
-		 if(cp1 != null)
-			 return false;
+		String sql = " quoting_currency = '" + cp.getQuoting_currency()
+				+ "' and primary_currency = '" + cp.getPrimary_currency() + "'";
+		CurrencyPair cp1 = CurrencyPairSQL.select(sql, dsSQL.getConn());
+		if (cp1 != null)
+			return false;
 		return CurrencyPairSQL.save(cp, dsSQL.getConn());
 	}
-
-	
 
 	@Override
 	public boolean deleteCurrencyPair(CurrencyPair cp) throws RemoteException {
 		// TODO Auto-generated method stub
-		return  CurrencyPairSQL.delete(cp, dsSQL.getConn());
+		return CurrencyPairSQL.delete(cp, dsSQL.getConn());
 	}
 
 	@Override
-	public Collection selectALLCurrencyPair(String secondaryCurrency) throws RemoteException {
+	public Collection selectALLCurrencyPair(String secondaryCurrency)
+			throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql = "  quoting_currency = '"+secondaryCurrency + "'";
-		
+		String sql = "  quoting_currency = '" + secondaryCurrency + "'";
+
 		return CurrencyPairSQL.selectCurrencyPair(sql, dsSQL.getConn());
 	}
 
@@ -895,15 +923,15 @@ public class ReferenceDataImp implements RemoteReferenceData {
 	public CurrencyPair updateCurrencyPair(CurrencyPair cp)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		return  CurrencyPairSQL.update(cp, dsSQL.getConn());
+		return CurrencyPairSQL.update(cp, dsSQL.getConn());
 	}
 
 	@Override
 	public Collection selectCurrencyPair(CurrencyPair cp)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
-		
+		String sql = " quoting_currency = '" + cp.getQuoting_currency() + "'";
+
 		return CurrencyPairSQL.selectCurrencyPair(sql, dsSQL.getConn());
 	}
 
@@ -916,17 +944,19 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	@Override
 	public boolean saveFavourites(Favorities favourites) throws RemoteException {
 		// TODO Auto-generated method stub
-		Vector fav = (Vector)FavouritiesSQL.getFavorities(favourites,dsSQL.getConn());
-		      if(fav == null || fav.isEmpty())
-		return FavouritiesSQL.save(favourites, dsSQL.getConn());
-		     return false;	
+		Vector fav = (Vector) FavouritiesSQL.getFavorities(favourites,
+				dsSQL.getConn());
+		if (fav == null || fav.isEmpty())
+			return FavouritiesSQL.save(favourites, dsSQL.getConn());
+		return false;
 	}
 
 	@Override
 	public Collection selectFavourites(Favorities favourites)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql = " userid = "+ favourites.getUserId() + "  and type = '" + favourites.getType() + "'";
+		String sql = " userid = " + favourites.getUserId() + "  and type = '"
+				+ favourites.getType() + "'";
 		return FavouritiesSQL.selectWhere(sql, dsSQL.getConn());
 	}
 
@@ -946,8 +976,8 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	@Override
 	public boolean checkSDIKey(Sdi sdi) throws RemoteException {
 		// TODO Auto-generated method stub
-		if(sdi != null ) {
-			return SdiSQL.SDIKeyWhere(sdi.getkey(),dsSQL.getConn());
+		if (sdi != null) {
+			return SdiSQL.SDIKeyWhere(sdi.getkey(), dsSQL.getConn());
 		}
 		return false;
 	}
@@ -955,8 +985,8 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	@Override
 	public Vector SDIWhere(String sql) throws RemoteException {
 		// TODO Auto-generated method stub
-		
-		return (Vector) SdiSQL.SDIWhere(sql,dsSQL.getConn());
+
+		return (Vector) SdiSQL.SDIWhere(sql, dsSQL.getConn());
 	}
 
 	@Override
@@ -964,6 +994,7 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 		// TODO Auto-generated method stub
 		return FolderSQL.save(folder, dsSQL.getConn());
 	}
+
 	@Override
 	public boolean updateFolder(Folder folder) throws RemoteException {
 		// TODO Auto-generated method stub
@@ -973,7 +1004,7 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	@Override
 	public Folder selectFolder(Folder folder) throws RemoteException {
 		// TODO Auto-generated method stub
-		return FolderSQL.selectFolder(folder.getId(),dsSQL.getConn());
+		return FolderSQL.selectFolder(folder.getId(), dsSQL.getConn());
 	}
 
 	@Override
@@ -983,9 +1014,9 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	}
 
 	@Override
-	public  Vector<Folder> selectALLFolders() throws RemoteException {
+	public Vector<Folder> selectALLFolders() throws RemoteException {
 		// TODO Auto-generated method stub
-		 return FolderSQL.selectALL(dsSQL.getConn());
+		return FolderSQL.selectALL(dsSQL.getConn());
 	}
 
 	@Override
@@ -998,7 +1029,7 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	public int saveNettingConfig(NettingConfig netConfig)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		 return NettingSQL.save(netConfig, dsSQL.getConn());
+		return NettingSQL.save(netConfig, dsSQL.getConn());
 	}
 
 	@Override
@@ -1027,19 +1058,18 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 		// TODO Auto-generated method stub
 		return NettingSQL.selectALL(dsSQL.getConn());
 	}
-	
 
 	@Override
 	public boolean deleteNettingConfig(int id) throws RemoteException {
 		// TODO Auto-generated method stub
 		NettingConfig netConfig = new NettingConfig();
 		netConfig.setId(id);
-		return NettingSQL.delete(netConfig,dsSQL.getConn());
+		return NettingSQL.delete(netConfig, dsSQL.getConn());
 	}
 
 	@Override
-	public CurrencySplitConfig saveCurrencySplitConfig(CurrencySplitConfig currencySPlit)
-			throws RemoteException {
+	public CurrencySplitConfig saveCurrencySplitConfig(
+			CurrencySplitConfig currencySPlit) throws RemoteException {
 		// TODO Auto-generated method stub
 		return CurrencySplitSQL.save(currencySPlit, dsSQL.getConn());
 	}
@@ -1048,20 +1078,21 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	public Vector selectCurrencySplitConfig(int splitConfigID)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		return CurrencySplitSQL.selectCurrencySplitConfig(splitConfigID, dsSQL.getConn());
+		return CurrencySplitSQL.selectCurrencySplitConfig(splitConfigID,
+				dsSQL.getConn());
 	}
 
 	@Override
 	public boolean deleteCurrencySplitConfig(CurrencySplitConfig currencySPlit)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		return CurrencySplitSQL.delete(currencySPlit,dsSQL.getConn());
+		return CurrencySplitSQL.delete(currencySPlit, dsSQL.getConn());
 	}
 
 	@Override
 	public Collection selectALCurrencySplitConfig() throws RemoteException {
 		// TODO Auto-generated method stub
-		return  CurrencySplitSQL.select(dsSQL.getConn());
+		return CurrencySplitSQL.select(dsSQL.getConn());
 	}
 
 	@Override
@@ -1072,10 +1103,12 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	}
 
 	@Override
-	public Vector getCurrencySplitConfig(int bookid,String currencypair) throws RemoteException {
+	public Vector getCurrencySplitConfig(int bookid, String currencypair)
+			throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql =  " bookid = "+ bookid + " and currencyPair = '"+currencypair +"'";
-		return CurrencySplitSQL.selectWhere(sql,dsSQL.getConn());
+		String sql = " bookid = " + bookid + " and currencyPair = '"
+				+ currencypair + "'";
+		return CurrencySplitSQL.selectWhere(sql, dsSQL.getConn());
 	}
 
 	@Override
@@ -1093,23 +1126,24 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	@Override
 	public Vector selectB2BConfig(int b2bConfigID) throws RemoteException {
 		// TODO Auto-generated method stub
-		return B2BConfigSQL.selectB2BConfig(b2bConfigID,  dsSQL.getConn());
+		return B2BConfigSQL.selectB2BConfig(b2bConfigID, dsSQL.getConn());
 	}
 
 	@Override
 	public Vector getB2BConfig(int bookid, String currencypair)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql =  " bookid = "+ bookid + " and currencyPair = '"+currencypair +"'";
-		return B2BConfigSQL.selectWhere(sql,dsSQL.getConn());
-	
+		String sql = " bookid = " + bookid + " and currencyPair = '"
+				+ currencypair + "'";
+		return B2BConfigSQL.selectWhere(sql, dsSQL.getConn());
+
 	}
 
 	@Override
 	public boolean deleteB2BConfig(B2BConfig currencySPlit)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		return  B2BConfigSQL.delete(currencySPlit,dsSQL.getConn());
+		return B2BConfigSQL.delete(currencySPlit, dsSQL.getConn());
 	}
 
 	@Override
@@ -1121,14 +1155,14 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	@Override
 	public boolean updateB2BConfig(B2BConfig b2bConfig) throws RemoteException {
 		// TODO Auto-generated method stub
-		return B2BConfigSQL.update(b2bConfig,dsSQL.getConn());
+		return B2BConfigSQL.update(b2bConfig, dsSQL.getConn());
 	}
 
 	@Override
 	public LiquidationConfig saveLiqConfig(LiquidationConfig LiqConfig)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		return LiquidationConfigSQL.save(LiqConfig,dsSQL.getConn());
+		return LiquidationConfigSQL.save(LiqConfig, dsSQL.getConn());
 	}
 
 	@Override
@@ -1136,7 +1170,8 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 			throws RemoteException {
 		// TODO Auto-generated method stub
 		String sql = "";
-		return (Vector) LiquidationConfigSQL.selectLiquidationConfigOnWhere(sql,dsSQL.getConn());
+		return (Vector) LiquidationConfigSQL.selectLiquidationConfigOnWhere(
+				sql, dsSQL.getConn());
 	}
 
 	@Override
@@ -1163,7 +1198,8 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	public LiquidationConfig getLiquidationConfigOn(int bookId,
 			String productType, String productSubType) {
 		// TODO Auto-generated method stub
-		return LiquidationConfigSQL.getLiquidationConfigOnWhere(bookId, productType, productSubType, dsSQL.getConn());
+		return LiquidationConfigSQL.getLiquidationConfigOnWhere(bookId,
+				productType, productSubType, dsSQL.getConn());
 	}
 
 	@Override
@@ -1177,14 +1213,19 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	public MessageConfig selectMessageConfig(MessageConfig messConfig)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		return MessageConfigSQL.selectMessage(messConfig.getId(),  dsSQL.getConn());
+		return MessageConfigSQL.selectMessage(messConfig.getId(),
+				dsSQL.getConn());
 	}
 
 	@Override
-	public Collection getMessageConfig(String productType,String productSubType,String eventType,int poid) {
-		String sql = " producttype ='"+productType+"' and productsubtype = '" + productSubType + "' and eventType = '" + eventType + "' and poid = " +poid;
-		return MessageConfigSQL.selectMessageConfigOn(sql,dsSQL.getConn());
+	public Collection getMessageConfig(String productType,
+			String productSubType, String eventType, int poid) {
+		String sql = " producttype ='" + productType
+				+ "' and productsubtype = '" + productSubType
+				+ "' and eventType = '" + eventType + "' and poid = " + poid;
+		return MessageConfigSQL.selectMessageConfigOn(sql, dsSQL.getConn());
 	}
+
 	@Override
 	public boolean deleteMessageConfig(MessageConfig messConfig)
 			throws RemoteException {
@@ -1209,12 +1250,14 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	public Sdi selectAgentSdi(int agentid, int poid, String format, String ccy,
 			String productype) throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql = " cpid = " + agentid + " and  poid = " + poid + " and sdiformat = '"+format+"' and currency = '"+ ccy+ "' and products = '" + productype +"'";
+		String sql = " cpid = " + agentid + " and  poid = " + poid
+				+ " and sdiformat = '" + format + "' and currency = '" + ccy
+				+ "' and products = '" + productype + "'";
 		Vector agentSdi = (Vector) SdiSQL.SDIWhere(sql, dsSQL.getConn());
-		if(agentSdi == null || agentSdi.isEmpty()) 
+		if (agentSdi == null || agentSdi.isEmpty())
 			return null;
-		else 
-		  return (Sdi)	agentSdi.elementAt(0);
+		else
+			return (Sdi) agentSdi.elementAt(0);
 	}
 
 	@Override
@@ -1223,19 +1266,18 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 		return null;
 	}
 
-	
 	@Override
 	public boolean updateLeContacts(LeContacts le) throws RemoteException {
 		// TODO Auto-generated method stub
-		return LeContactsSql. update(le, dsSQL.getConn());
+		return LeContactsSql.update(le, dsSQL.getConn());
 	}
-	
+
 	@Override
 	public boolean deleteLeContacts(LeContacts le) throws RemoteException {
 		// TODO Auto-generated method stub
 		return LeContactsSql.delete(le, dsSQL.getConn());
 	}
-	
+
 	@Override
 	public Collection getALLLecontacts() throws RemoteException {
 		// TODO Auto-generated method stub
@@ -1251,7 +1293,7 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	@Override
 	public Collection selectLeContacts(int leid) throws RemoteException {
 		// TODO Auto-generated method stub
-		return LeContactsSql.selectContactsOnLe(leid,dsSQL.getConn());
+		return LeContactsSql.selectContactsOnLe(leid, dsSQL.getConn());
 	}
 
 	@Override
@@ -1264,7 +1306,8 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	public Country selectCountryName(String countryName) throws RemoteException {
 		// TODO Auto-generated method stub
 		return CountrySQL.selectISOCODEOnCountry(countryName, dsSQL.getConn());
-	} 
+	}
+
 	@Override
 	public Collection selectALLCountry() throws RemoteException {
 		// TODO Auto-generated method stub
@@ -1276,7 +1319,7 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 		// TODO Auto-generated method stub
 		return LeContactsSql.save(le, dsSQL.getConn());
 	}
-	
+
 	@Override
 	public int saveDateRule(DateRule dateRule) throws RemoteException {
 		// TODO Auto-generated method stub
@@ -1292,15 +1335,17 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	@Override
 	public DateRule getDateRule(int dateRuleID) throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 		return DateRuleSQL.select(dateRuleID, dsSQL.getConn());
 	}
+
 	@Override
 	public DateRule getDateRule(String dateRuleID) throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 		return DateRuleSQL.select(dateRuleID, dsSQL.getConn());
 	}
+
 	@Override
 	public Vector getallDateRules() throws RemoteException {
 		// TODO Auto-generated method stub
@@ -1312,23 +1357,27 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 		// TODO Auto-generated method stub
 		return DateRuleSQL.delete(id, dsSQL.getConn());
 	}
+
 	@Override
 	public Collection getLegalEntityDataOnRole(String role)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		String roleSQL = " role like '%"+role.trim()+"%'";
+		String roleSQL = " role like '%" + role.trim() + "%'";
 		return LegalEntitySQL.selectLEOnWhereClause(roleSQL, dsSQL.getConn());
 	}
+
 	@Override
 	public Collection getALLExchanges() throws RemoteException {
 		// TODO Auto-generated method stub
 		return getLegalEntityDataOnRole("Exchange");
 	}
-	
+
 	@Override
-	public Collection selectLEContactOnWhereClause(String whereClause) throws RemoteException {
+	public Collection selectLEContactOnWhereClause(String whereClause)
+			throws RemoteException {
 		// TODO Auto-generated method stub
-		return LeContactsSql.selectLEContactOnWhereClause(whereClause, dsSQL.getConn());
+		return LeContactsSql.selectLEContactOnWhereClause(whereClause,
+				dsSQL.getConn());
 	}
 
 	@Override
@@ -1340,20 +1389,22 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 		Users fetchedUser = UsersSQL.selectUsers(user.getUser_name(),
 				userPassword, user.getUser_groups(), dsSQL.getConn());
 
-	/*	if (fetchedUser != null) {
-			
-			encodeUserPassword = AccessMechanismUtil
-					.getPasswordWithSalt(userPassword,
-							UsersSQL.getSalt(fetchedUser, dsSQL.getConn()));
-			
-		} */
-		
-		//if (!encodeUserPassword.equals(fetchedUser.getPassword())) {
-			
-		//	fetchedUser = null;
-			
-		//}
-		
+		/*
+		 * if (fetchedUser != null) {
+		 * 
+		 * encodeUserPassword = AccessMechanismUtil
+		 * .getPasswordWithSalt(userPassword, UsersSQL.getSalt(fetchedUser,
+		 * dsSQL.getConn()));
+		 * 
+		 * }
+		 */
+
+		// if (!encodeUserPassword.equals(fetchedUser.getPassword())) {
+
+		// fetchedUser = null;
+
+		// }
+
 		return fetchedUser;
 	}
 
@@ -1361,7 +1412,8 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	public Vector getCurrencySplitConfig(int bookID, String currencyPair,
 			String currency) throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql = " bookid = "+bookID+" and CURRENCYTOSPLIT='"+currency+"' and CURRENCYPAIR='"+currencyPair+"'";
+		String sql = " bookid = " + bookID + " and CURRENCYTOSPLIT='"
+				+ currency + "' and CURRENCYPAIR='" + currencyPair + "'";
 		return CurrencySplitSQL.selectWhere(sql, dsSQL.getConn());
 	}
 
@@ -1369,23 +1421,25 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	public Vector getSDIONLegalEntityRole(String role, int leID)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql = " role ='" + role +"' and cpid = " + leID;
+		String sql = " role ='" + role + "' and cpid = " + leID;
 		return SDIWhere(sql);
 	}
-/*	@Override
-	public Vector getPreferredSDIONLegalEntityRoleCurrencyProduct(String role, int leID)
-			throws RemoteException {
-		// TODO Auto-generated method stub
-		String sql = " role ='" + role +"' and cpid = " + leID;
-		return SDIWhere(sql);
-	}*/
+
+	/*
+	 * @Override public Vector
+	 * getPreferredSDIONLegalEntityRoleCurrencyProduct(String role, int leID)
+	 * throws RemoteException { // TODO Auto-generated method stub String sql =
+	 * " role ='" + role +"' and cpid = " + leID; return SDIWhere(sql); }
+	 */
 
 	@Override
 	public Vector getPreferredSDIONLegalEntityRoleCurrencyProduct(String role,
 			String productType, String Currency, int leID)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql = " role ='" + role +"'and products = '"+productType+"' and currency = '"+Currency+"' and cpid = " + leID + " order by priority ";
+		String sql = " role ='" + role + "'and products = '" + productType
+				+ "' and currency = '" + Currency + "' and cpid = " + leID
+				+ " order by priority ";
 		return SDIWhere(sql);
 	}
 
@@ -1393,8 +1447,10 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	public Collection getMessageConfigsonProductype(String productype,
 			String productSubtype) throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql =  " producttype = '"+ productype + "' and productsubtype ='" + productSubtype +"'";
-		Vector messConfig = (Vector) MessageConfigSQL.selectMessageConfigOn(sql, dsSQL.getConn());
+		String sql = " producttype = '" + productype
+				+ "' and productsubtype ='" + productSubtype + "'";
+		Vector messConfig = (Vector) MessageConfigSQL.selectMessageConfigOn(
+				sql, dsSQL.getConn());
 		return messConfig;
 	}
 
@@ -1402,8 +1458,11 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	public Collection getMessageConfigsonProductype(String productype,
 			String productSubtype, int poID) throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql =  " producttype = '"+ productype + "' and productsubtype ='" + productSubtype +"' and poid = "+poID;
-		Vector messConfig = (Vector) MessageConfigSQL.selectMessageConfigOn(sql, dsSQL.getConn());
+		String sql = " producttype = '" + productype
+				+ "' and productsubtype ='" + productSubtype + "' and poid = "
+				+ poID;
+		Vector messConfig = (Vector) MessageConfigSQL.selectMessageConfigOn(
+				sql, dsSQL.getConn());
 		return messConfig;
 	}
 
@@ -1435,7 +1494,7 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	}
 
 	@Override
-	public Collection selectWindowSheet(String windowName )
+	public Collection selectWindowSheet(String windowName)
 			throws RemoteException {
 		// TODO Auto-generated method stub
 		return WindowSheetSQL.selectWindowSheet(windowName, dsSQL.getConn());
@@ -1456,7 +1515,7 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	@Override
 	public void removeWindowSheet(WindowSheet data) throws RemoteException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -1470,7 +1529,8 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	public Collection selectWindowSheet(String windowName, String designType)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql = " windowName ='"+windowName+"' and designType ='"+designType+"'";
+		String sql = " windowName ='" + windowName + "' and designType ='"
+				+ designType + "'";
 		return WindowSheetSQL.selectWindowSheetWhere(sql, dsSQL.getConn());
 	}
 
@@ -1483,37 +1543,46 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	@Override
 	public Collection selectALLWindowTableModel() throws RemoteException {
 		// TODO Auto-generated method stub
-		return WindowTableModelMappingSQL.selectALL(dsSQL.getConn()) ;
+		return WindowTableModelMappingSQL.selectALL(dsSQL.getConn());
 	}
+
 	@Override
-	public Collection selectWindowTableModel(String windowName) throws RemoteException {
+	public Collection selectWindowTableModel(String windowName)
+			throws RemoteException {
 		// TODO Auto-generated method stub
-		String sql=  " WINDOWNAME = '"+ windowName +"'";
-		return WindowTableModelMappingSQL.selectWindowModel(sql,dsSQL.getConn()) ;
+		String sql = " WINDOWNAME = '" + windowName + "'";
+		return WindowTableModelMappingSQL.selectWindowModel(sql,
+				dsSQL.getConn());
 	}
+
 	@Override
 	public WindowTableModelMapping saveWindowTableModel(
 			WindowTableModelMapping windowtablemodelmapping)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		return WindowTableModelMappingSQL.save(windowtablemodelmapping, dsSQL.getConn());
-		 
+		return WindowTableModelMappingSQL.save(windowtablemodelmapping,
+				dsSQL.getConn());
+
 	}
+
 	@Override
 	public boolean deleteWindowTableModel(
 			WindowTableModelMapping windowtablemodelmapping)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		return WindowTableModelMappingSQL.delete(windowtablemodelmapping, dsSQL.getConn());
-		 
+		return WindowTableModelMappingSQL.delete(windowtablemodelmapping,
+				dsSQL.getConn());
+
 	}
+
 	@Override
 	public boolean updateWindowTableModel(
 			WindowTableModelMapping windowtablemodelmapping)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		return WindowTableModelMappingSQL.update(windowtablemodelmapping, dsSQL.getConn());
-		 
+		return WindowTableModelMappingSQL.update(windowtablemodelmapping,
+				dsSQL.getConn());
+
 	}
 
 	@Override
@@ -1535,7 +1604,7 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 		// TODO Auto-generated method stub
 		return MenuConfigSQL.delete(menuconfiguration, dsSQL.getConn());
 	}
-	
+
 	@Override
 	public boolean updateMenuConfig(MenuConfiguration menuconfiguration)
 			throws RemoteException {
@@ -1546,7 +1615,93 @@ String sql = " quoting_currency = '"+cp.getQuoting_currency() + "'";
 	@Override
 	public Vector<MenuConfiguration> selectMenuConfig() throws RemoteException {
 		// TODO Auto-generated method stub
-		return (Vector<MenuConfiguration>) MenuConfigSQL.selectALL( dsSQL.getConn());
+		return (Vector<MenuConfiguration>) MenuConfigSQL.selectALL(dsSQL
+				.getConn());
 	}
- 
+
+	@Override
+	public BaseBean insertSQL(  String sql,String beanName) {
+		// TODO Auto-generated method stub
+		return makeSQLObject(beanName).insertSQL(sql,dsSQL.getConn() );
+	}
+
+	@Override
+	public boolean updateSQL(  String sql,String beanName) {
+		// TODO Auto-generated method stub
+		return makeSQLObject(beanName).updateSQL(sql, dsSQL.getConn());
+	}
+
+	@Override
+	public boolean deleteSQL(String sql,String beanName) {
+		// TODO Auto-generated method stub
+		return makeSQLObject(beanName).deleteSQL(sql, dsSQL.getConn());
+	}
+
+	@Override
+	public BaseBean insertSQL(  BaseBean sql,String beanName) {
+		// TODO Auto-generated method stub
+		return makeSQLObject(beanName).insertSQL(sql, dsSQL.getConn());
+	}
+
+	@Override
+	public boolean updateSQL(  BaseBean sql,String beanName) {
+		// TODO Auto-generated method stub
+		return makeSQLObject(beanName).updateSQL(sql, dsSQL.getConn());
+	}
+
+	@Override
+	public boolean deleteSQL(   BaseBean sql,String beanName) {
+		// TODO Auto-generated method stub
+		return makeSQLObject(beanName).deleteSQL(sql, dsSQL.getConn());
+	}
+
+	@Override
+	public BaseBean select(   int id,String beanName) {
+		// TODO Auto-generated method stub
+		return makeSQLObject(beanName).select(id, dsSQL.getConn());
+	}
+
+	@Override
+	public BaseBean select(   String name,String beanName) {
+		// TODO Auto-generated method stub
+		return makeSQLObject(beanName).select(name, dsSQL.getConn());
+	}
+
+	@Override
+	public Collection selectWhere(   String where,String beanName) {
+		// TODO Auto-generated method stub
+		return makeSQLObject(beanName).selectWhere(where, dsSQL.getConn());
+	}
+
+	@Override
+	public Collection selectALLData(  String beanName) {
+		// TODO Auto-generated method stub
+		return makeSQLObject(beanName).selectALLData(  dsSQL.getConn());
+	}
+
+	static public Hashtable<String, BaseSQL> sqlCache = new Hashtable<String, BaseSQL>();
+
+	private static BaseSQL makeSQLObject(String sqlName) {
+		BaseSQL sql = null;
+		 
+		if (!commonUTIL.isEmpty(sqlName)) {
+			String sqlObject = "dbSQL." + sqlName +"SQL";
+			try {
+				sql = sqlCache.get(sqlName);
+				if (sql == null) {
+					Class sqlC = ClassInstantiateUtil
+							.getClass(sqlObject, false);
+					if (sqlC != null) {
+						sql = (BaseSQL) sqlC.newInstance();
+						sqlCache.put(sqlName.trim(), sql);
+					}
+				}
+			} catch (InstantiationException | IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				commonUTIL.displayError("ReferenceDataImp", "makeSQLObject", e);
+			}
+		}
+		return sql;
+	}
+
 }

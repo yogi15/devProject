@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 
 import beans.Attribute;
 import beans.B2BConfig;
+import beans.BaseBean;
 import beans.Book;
 import beans.Country;
 import beans.CurrencyDefault;
@@ -15,7 +16,7 @@ import beans.Folder;
 import beans.Holiday;
 import beans.JTableMapping;
 import beans.LeContacts;
-import beans.LegalEntity;
+import beans.CounterParty;
 import beans.LiquidationConfig;
 import beans.MenuConfiguration;
 import beans.MessageConfig;
@@ -29,11 +30,28 @@ import beans.WindowSheet;
 import beans.WindowTableModelMapping;
 
 import java.rmi.Remote;
+import java.sql.Connection;
 import java.util.Collection;
 import java.util.Vector;
 
+import dbSQL.BaseSQL;
+
 public interface RemoteReferenceData extends Remote{
 	
+	
+	public BaseBean insertSQL( String sql  ,String beanName) throws RemoteException;
+	  public boolean updateSQL( String sql  ,String beanName)throws RemoteException;
+	  public boolean deleteSQL( String sql  ,String beanName)throws RemoteException;
+
+	  public BaseBean insertSQL(  BaseBean sql  ,String beanName)throws RemoteException;
+	  public boolean updateSQL( BaseBean sql  ,String beanName)throws RemoteException;
+	  public boolean deleteSQL( BaseBean sql  ,String beanName)throws RemoteException;
+	  public BaseBean select( int id  ,String beanName)throws RemoteException;
+	  public BaseBean select( String name  ,String beanName)throws RemoteException;
+	  public Collection selectWhere( String where  ,String beanName)throws RemoteException;
+	  public Collection selectALLData(  String beanName)throws RemoteException;
+	  
+	  
 	
 	public Collection selectLEContactOnWhereClause(String whereClause) throws RemoteException;
 	public int saveMessageConfig(MessageConfig messConfig)throws RemoteException;
@@ -112,7 +130,7 @@ public interface RemoteReferenceData extends Remote{
 	
 	public Collection  getLegalEntityDataOnRole(String role) throws RemoteException;
 	public Collection  getALLExchanges() throws RemoteException;
-	public boolean deleteLE(LegalEntity deleteLegalEntity) throws RemoteException;
+	public boolean deleteLE(CounterParty deleteLegalEntity) throws RemoteException;
 	
 	public boolean saveAttribue(Attribute att)throws RemoteException;
 	public Collection selectAttribute(Attribute att)throws RemoteException;
@@ -164,9 +182,9 @@ public interface RemoteReferenceData extends Remote{
 	public boolean updateWindowSheet(WindowSheet data)throws RemoteException;
 	public void removeWindowSheet(WindowSheet data) throws RemoteException;
 	
-	public int saveLe(LegalEntity le)throws RemoteException;
+	public int saveLe(CounterParty le)throws RemoteException;
 	public int getMAXLEID() throws RemoteException;
-	public LegalEntity selectLE(int i)throws RemoteException;
+	public CounterParty selectLE(int i)throws RemoteException;
 	
 	public int saveLeContacts(LeContacts le)throws RemoteException;
 	public boolean updateLeContacts(LeContacts le) throws RemoteException;
@@ -176,9 +194,9 @@ public interface RemoteReferenceData extends Remote{
 	public Collection getLeContacts(int leid) throws RemoteException;
 	public Collection selectLeContacts(int i)throws RemoteException;
 	
-	public void removeLe(LegalEntity le)throws RemoteException;
+	public void removeLe(CounterParty le)throws RemoteException;
 	
-	public boolean updateLe(LegalEntity le)throws RemoteException;
+	public boolean updateLe(CounterParty le)throws RemoteException;
 	
 	
 	public Sdi saveSDI(Sdi sdi)throws RemoteException;
@@ -207,7 +225,7 @@ public interface RemoteReferenceData extends Remote{
 	public boolean deleteNettingConfig(int id) throws RemoteException;
 	public Vector getSearchCriteria() throws RemoteException;
 	public Vector  getSearchColumn(String type) throws RemoteException;
-	public boolean isExistLEwithName(LegalEntity le) throws RemoteException;
+	public boolean isExistLEwithName(CounterParty le) throws RemoteException;
 	public Vector getBookWhere(String sql) throws RemoteException;
 	public Collection getMessageConfig(String productType, String productSubType,
 			String eventType, int poid) throws RemoteException;
