@@ -13,9 +13,16 @@ public class PropertyPaneConstants {
 	final public static String LEGALENTITY = "LegalEntity";
 	final public static String MULTISELECTION = "MultiSelection";
 	
+	final public static String FIELDNAMES = "FieldNames";
+	final public static String IsChildField = "IsChildField";
+
+	final public static String ParentFieldName = "ParentFieldName";
 	final public static String BEANNAMES = "BeanName";
 
 	final public static String BOOK = "Book";
 	public static final String FOLDER = "Folder";
 	public static final String TIMEZONE = "TimeZone";
+	public static final String INITIALDATA = "InitialData";
+	public static final String PARENTWINDOWNAME = "ParentWindowName";
+	public static final String ISHIERARACHICALWINDOW = "IsHierarachicalWindow";
 }

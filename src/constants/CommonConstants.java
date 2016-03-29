@@ -33,6 +33,7 @@ public class CommonConstants {
 	final public static String CLOSEBUTTON = "Close";
 	final public static String RIGHTSIDECENTERTABLE = "RightSideCenterTable";
 	public static final String DELETEBUTTON = "Delete";
+	final public static String HIERARACHICALTABLE = "HieRarachical Table";
 	
 	
 	public static final String STRING = "String";

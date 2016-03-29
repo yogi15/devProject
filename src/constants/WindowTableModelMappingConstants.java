@@ -17,8 +17,19 @@ package constants;
  final public static String CUSTOMCOLUMNNAME ="CustomColumnName";
 
  final public static String CUSTOMMETHODNAME ="CustomMethodName";
+ 
+ final public static String ISSTARTUPDATA ="ISstartupData";
+ final public static String STARTUPDATANAME = "StartUpDataName"; 
+
+ final public static String COMBOXBEANNAME = "BeanData"; 
+
+ final public static String COMBOXMETHODNAME = "MethodData"; 
+ final public static String BEANDATA = "BeanData";
+ 
+ 
 public static final String SEARCHTEXTBOX = "WindowTableModelMappingSearchTextBox";
 public static final String CUSTOMDATATYPE = "CustomColumnDataType";
-public static final String ISCOMBOX = "IsCombobox";
+public static final String COMBOXPROPERTIESNAME = "ComboBoxProperty";
+public static final String ISCOMBOX = "IsCombobox"; 
 
 }

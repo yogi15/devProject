@@ -19,7 +19,7 @@ public class BeanConstants {
 	 public static String BOOK = "Book";  
 	 public static String BOOKATTRIBUTE = "BookAttribute";  
 	 public static String CASHPOSITION = "CashPosition";  
-	 public static String COUNTERPARTY = "LegalEntity";  
+	 public static String LEGALENTITY = "LegalEntity";  
 	 public static String COUNTRY = "Country";  
 	 public static String COUPON = "Coupon";  
 	 public static String CURRENCYDEFAULT = "CurrencyDefault";  
