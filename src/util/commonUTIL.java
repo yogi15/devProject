@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -126,6 +127,16 @@ public class commonUTIL {
     		}
     	}
 		return name;                                           
+        // TODO add your handling code here:
+    }
+	static public void  convertSringArrayToVector(String [] s,Vector<String> data) {
+		
+    	for(int i=0;i<s.length;i++) {
+    		 data.addElement(s[i]);
+    		 
+    		}
+    	
+		                                          
         // TODO add your handling code here:
     }
 	 
@@ -598,8 +609,8 @@ public class commonUTIL {
 	
 	 static public synchronized void display(String name,String message) {
 		// if(!name.contains("SQL"))
-	      LogPublishUtil.addMessage("Classname : " + name + " : MethodName : " +message + " :: ");
-	     // System.out.println("Classname : " + name + " : MethodName : " +message + " :: ");
+	    //  LogPublishUtil.addMessage("Classname : " + name + " : MethodName : " +message + " :: ");
+	      System.out.println("Classname : " + name + " : MethodName : " +message + " :: ");
 	   //  DebugEventProcessor deb = new DebugEventProcessor();
 	 //   deb.setComments("Classname : " + name + " : MethodName : " +message + " :: ");
 	   //    publishEvent(deb);
@@ -607,8 +618,8 @@ public class commonUTIL {
 	    }
 	 static public synchronized void display(String logName,String name,String message) {
 			// if(!name.contains("SQL"))
-		      LogPublishUtil.addMessage("logName : " + logName + " : ClassName " + name + "  message : " +message + " :: ");
-		     // System.out.println("Classname : " + name + " : MethodName : " +message + " :: ");
+		    //  LogPublishUtil.addMessage("logName : " + logName + " : ClassName " + name + "  message : " +message + " :: ");
+		      System.out.println("Classname : " + name + " : MethodName : " +message + " :: ");
 		   //  DebugEventProcessor deb = new DebugEventProcessor();
 		 //   deb.setComments("Classname : " + name + " : MethodName : " +message + " :: ");
 		   //    publishEvent(deb);
@@ -1812,6 +1823,19 @@ public class commonUTIL {
 				  }
 			  }
 			  return s.toString();
+		  }
+	  }
+	  public static void convertStringToCollection( String s,List<String> c) {
+		  if (isEmpty(s)) return;  
+		  
+		  else {
+			  StringTokenizer token = new StringTokenizer(s, DEFAULT_LIST_SEPARATOR_CHAR);
+			  if( token.countTokens() == 0)
+				  c.add(s); 
+			  while (token.hasMoreTokens()) {
+				String item =(String) token.nextElement();
+				 c.add(item);
+			  }
 		  }
 	  }
   /**
