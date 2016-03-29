@@ -10,10 +10,9 @@ public class WindowSheetTableModelUtil extends AbstractTableModel {
     
 	 /**
  * 
- */
-private static final long serialVersionUID = -8215525061025568783L;
+ */ 
 	final String[] columnNames;  
-	 String col[] = {"DesignType","WindowName","FieldName","DataType","Default","IsStartUpData","StartDataName","CustomPanel","IsNull","BeanName","MethodName"};
+	 String col[] = {"DesignType","WindowName","FieldName","DataType","Default","IsStartUpData","StartDataName","CustomPanel","IsNull","BeanName","MethodName","IsChildField","ParentFieldName"};
 	 /**
 	 * @return the data
 	 */
@@ -48,7 +47,11 @@ private static final long serialVersionUID = -8215525061025568783L;
 	 @Override
      public Class getColumnClass(int column) {
 		 switch (column) {
+		 case 5:
+        	 return Boolean.class;
          case 8:
+        	 return Boolean.class;
+         case 11:
         	 return Boolean.class;
          default:
              return String.class;
@@ -78,7 +81,10 @@ private static final long serialVersionUID = -8215525061025568783L;
 	         value =windowSheet.getDefaultValue();
 	         break;
 	     case 5:
-	         value =windowSheet.getIsStartupdata();
+	         if(windowSheet.getIsStartupdata() ==1) 
+	        	 return true;
+	         if(windowSheet.getIsStartupdata() ==0) 
+	        	 return false;
 	         break;
 	     case 6:
 	         value =windowSheet.getStartUpDataName();
@@ -94,6 +100,12 @@ private static final long serialVersionUID = -8215525061025568783L;
 	         break;
 	     case 10:
 	         value =windowSheet.getMethodName();
+	         break;
+	     case 11:
+	         value =new Boolean(windowSheet.isChildField());
+	         break;
+	     case 12:
+	         value = windowSheet.getParentFieldName();
 	         break;
 		 }
 	     return value;
