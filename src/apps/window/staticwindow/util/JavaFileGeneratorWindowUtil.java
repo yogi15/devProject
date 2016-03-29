@@ -8,8 +8,8 @@ import java.util.Vector;
 
 import javax.swing.JScrollPane;
 
-import util.ReferenceDataCache;
 import util.commonUTIL;
+import util.cacheUtil.ReferenceDataCache;
 import apps.window.staticwindow.BasePanel;
 import apps.window.staticwindow.JavaFileGeneratorWindow;
 import beans.JavaFileGenerator;

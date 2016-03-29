@@ -7,8 +7,8 @@ import org.apache.activemq.store.ReferenceStore.ReferenceData;
 
 import com.jidesoft.grid.Property; 
 
-import util.ReferenceDataCache;
 import util.commonUTIL;
+import util.cacheUtil.ReferenceDataCache;
 import apps.window.staticwindow.BasePanel;
 import apps.window.staticwindow.WindowSheetWindow;
 import apps.window.util.tableModelUtil.TableUtils;
@@ -231,6 +231,7 @@ public class WindowSheetWindowUtil extends BaseWindowUtil {
 				WindowSheet firstRecord = data.get(0);
 				for(int i=0;i<data.size();i++) {
 					windowSheetWindow.model.addRow((WindowSheet)data.get(i));
+					windowSheetWindow.propertyTable.addFieldName(((WindowSheet)data.get(i)).getFieldName());
 					
 				}
 				windowSheetWindow.propertyTable.setPropertiesValues(firstRecord);
@@ -254,12 +255,17 @@ public class WindowSheetWindowUtil extends BaseWindowUtil {
 	}
 	// check Null pointerException.
 	private void deleteButtonAction() {
+		
+
 		if(ReferenceDataCache.deleteWindowSheet(windowSheet)) {
 			if( windowSheetWindow.rightSideCenterTable.getSelectedRow() != -1) {
 				windowSheetWindow.model.delRow(windowSheetWindow.rightSideCenterTable.getSelectedRow()); 
 			}
 			setWindowSheet(null);
+			clearAllPropertiesFields = true;
 			 windowSheetWindow.propertyTable.clearPropertyValues();
+
+			 clearAllPropertiesFields = false;
 			}
 		 
 
@@ -273,12 +279,10 @@ public class WindowSheetWindowUtil extends BaseWindowUtil {
 		  Vector<String> windowS=	ReferenceDataCache.getStarupData(WindowSheetConstants.WINDOWNAME);
 		  windowSheetWindow.searchData = commonUTIL.convertStartupVectortoStringArray(windowS);
 	}
-
+    
 	@Override
 	public void clearALL() {
-		// TODO Auto-generated method stub
-		windowSheetWindow.propertyTable = null;
-	 
+		// TODO Auto-generated method stub 
 		
 	}
 }

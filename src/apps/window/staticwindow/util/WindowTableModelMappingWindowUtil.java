@@ -1,13 +1,15 @@
 package apps.window.staticwindow.util;
 
 import java.util.Vector;
-import util.ReferenceDataCache;
 import util.commonUTIL;
+import util.cacheUtil.ReferenceDataCache;
 import apps.window.staticwindow.BasePanel;
 import apps.window.staticwindow.WindowTableModelMappingWindow;
 import apps.window.util.tableModelUtil.TableUtils;
 import beans.WindowTableModelMapping;
 import com.jidesoft.grid.Property;
+
+import constants.BeanConstants;
 import constants.CommonConstants;
 import constants.WindowSheetConstants;
 import constants.WindowTableModelMappingConstants;
@@ -97,7 +99,8 @@ public class WindowTableModelMappingWindowUtil extends BaseWindowUtil {
 		setWindowTableModelMapping((WindowTableModelMapping) windowtablemodelmappingWindow.propertyTable.getBean());
 		if(validate( )) 
 			 
-		  if(ReferenceDataCache.updateWindowTableModelMapping(getWindowTableModelMapping())) {
+		 // if(ReferenceDataCache.updateWindowTableModelMapping(getWindowTableModelMapping())) {
+			if(ReferenceDataCache.updateSQL(getWindowTableModelMapping(),BeanConstants.WINDOWTABLEMODELMAPPING)) {
 			  if(windowtablemodelmappingWindow.rightSideCenterTable.getSelectedRow() != -1) {
 				  int i=  TableUtils.getSelectedRowIndex( windowtablemodelmappingWindow.rightSideCenterTable);
 				  windowtablemodelmappingWindow.model.udpateValueAt(getWindowTableModelMapping(), i, 0);
@@ -124,8 +127,8 @@ public class WindowTableModelMappingWindowUtil extends BaseWindowUtil {
 		
 		 
 		if (validate()) {
-			windowtablemodelmapping= ReferenceDataCache
-					.saveWindowTableModelMapping(windowtablemodelmapping) ;
+			windowtablemodelmapping= (WindowTableModelMapping) ReferenceDataCache
+					.insertSQL(windowtablemodelmapping,BeanConstants.WINDOWTABLEMODELMAPPING) ;
 		 
 				windowtablemodelmappingWindow.model
 						.addRow(windowtablemodelmapping);
@@ -144,8 +147,8 @@ public class WindowTableModelMappingWindowUtil extends BaseWindowUtil {
 		String searchText = windowtablemodelmappingWindow.WindowTableModelMappingSearchTextField
 				.getText();
 		if (!commonUTIL.isEmpty(searchText)) {
-			Vector<WindowTableModelMapping> data = ReferenceDataCache
-					.selectWindowTableModelMappings(searchText);
+			Vector<WindowTableModelMapping> data = (Vector<WindowTableModelMapping>) ReferenceDataCache
+					.selectWhere(searchText,BeanConstants.WINDOWTABLEMODELMAPPING);
 			windowtablemodelmappingWindow.model.clear();
 			if (!commonUTIL.isEmpty(data)) {
 				WindowTableModelMapping firstRecord = data.get(0);
@@ -186,7 +189,7 @@ public class WindowTableModelMappingWindowUtil extends BaseWindowUtil {
 			if(windowtablemodelmapping == null)
 				return;
 			if (ReferenceDataCache
-					.deleteWindowTableModelMapping(windowtablemodelmapping)) {
+					.deleteSQL(  windowtablemodelmapping,BeanConstants.WINDOWTABLEMODELMAPPING)) {
 				if (windowtablemodelmappingWindow.rightSideCenterTable
 						.getSelectedRow() != -1) {
 					windowtablemodelmappingWindow.model

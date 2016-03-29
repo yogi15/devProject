@@ -6,26 +6,46 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Vector;
 
-import util.ReferenceDataCache;
 import util.commonUTIL;
+import util.cacheUtil.ReferenceDataCache;
 import apps.window.staticwindow.BasePanel;
 import apps.window.staticwindow.JavaScriptWindow;
-import apps.window.util.tableModelUtil.TableUtils;
+import beans.LegalEntity;
 import beans.JavaScript;
-import beans.Template;
 import beans.WindowSheet;
 import beans.WindowTableModelMapping;
 
+import com.jidesoft.grid.HierarchicalTableModel;
 import com.jidesoft.grid.Property;
 
+import constants.BeanConstants;
 import constants.CommonConstants;
 import constants.JavaScriptConstants;
+import constants.LegalEntityConstants;
+import constants.WindowSheetConstants;
 import constants.WindowTableModelMappingConstants;
 
 public class JavaScriptWindowUtil extends BaseWindowUtil {
 	JavaScriptWindow javaScriptWindow = null;
 	JavaScript javaScript = null;
 	String javaScriptName = "";
+	boolean isWindowHier = false;
+	boolean isWindowChild = false;
+	String beanName = "Template";
+
+	/**
+	 * @return the beanName
+	 */
+	public String getBeanName() {
+		return beanName;
+	}
+
+	/**
+	 * @param beanName the beanName to set
+	 */
+	public void setBeanName(String beanName) {
+		this.beanName = beanName;
+	}
 
 	/**
 	 * @return the windowName
@@ -120,14 +140,21 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		javaScriptWindow.model.clear();
 		setJavaScript(null);
 	}
-
+	String hieraricalTable = "";
+	String addComboBoxColumnScript ="";
+	String addComboxBoxVaraible = "";
 	private void loadButtonAction() {
 		javaScriptWindow.propertyTable
 				.setfillValues(javaScriptWindow.propertyTable.getJavaScript());
 		String windowName = javaScriptWindow.propertyTable.getJavaScript()
 				.getWindowName();
 		javaScriptWindow.textarea.setText("");
-		String script = "";
+		String script = ""; 
+		isWindowChild = isWindowChild( windowName);
+		  hieraricalTable = getHierarachicalModel(windowName);
+		  addComboBoxColumnScript = getComboxOnColumn(windowName);
+		  addComboxBoxVaraible = getVariableForComboxColumn(windowName);
+		  beanName =getBeanName();
 		if (javaScriptWindow.propertyTable.getJavaScript().getScriptName()
 				.equalsIgnoreCase(JavaScriptConstants.CONSTANTS)) {
 			script = createWindowConstantsScript(windowName);
@@ -228,12 +255,17 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 	}
 
 	public String createWindowScript(String windowName) {
-		String windowScript = "";
+		
+		String  windowScript ="";
 		windowScript = windowScript
 				+ "package apps.window.staticwindow; \n\n\n  import java.awt.BorderLayout;\n";
 		windowScript = windowScript + "import java.awt.Component;\n";
 		windowScript = windowScript + "import java.util.ArrayList;\n";
 		windowScript = windowScript + "import java.util.Vector;\n";
+		windowScript = windowScript + "import java.util.Vector;\n";
+		windowScript = windowScript + "import javax.swing.JScrollPane;\n";
+		windowScript = windowScript + "import com.jidesoft.grid.TextFieldCellEditor;\n";
+				windowScript = windowScript + "import com.jidesoft.hints.ListDataIntelliHints;\n";
 
 		windowScript = windowScript + "import javax.swing.ActionMap;\n";
 		windowScript = windowScript + "import javax.swing.BorderFactory;\n";
@@ -252,31 +284,31 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 				+ "import apps.window.util.propertyTable.TemplatePropertyTable;\n";
 		windowScript = windowScript
 				+ "import apps.window.util.tableModelUtil.TemplateTableModelUtil;\n";
-		windowScript = windowScript + "import beans.Template;\n";
+		windowScript = windowScript + "import beans."+getBeanName() +" ;\n";
 		windowScript = windowScript + "import constants.CommonConstants;\n";
 		windowScript = windowScript
-				+ "import constants.TemplateConstants;\n\n\n";
+				+ "import constants."+getBeanName() +"Constants;\n\n\n";
 
 		windowScript = windowScript
 				+ "public class TemplateWindow    extends BasePanel {\n";
 		windowScript = windowScript + "   ActionMap actions = null;\n";
-		windowScript = windowScript + "   public String searchData [];\n";
+		windowScript = windowScript + "   public String searchData [];\n"+addComboxBoxVaraible;
 		windowScript = windowScript
 				+ "  private static final long serialVersionUID = 1L; \n";
 		windowScript = windowScript
 				+ "   public TemplateTableModelUtil model =null;\n";
 		windowScript = windowScript
-				+ "     Template template = new Template(); /// used as a bean \n";
+				+ "     "+getBeanName() +" template = new "+getBeanName() +"(); /// used as a bean \n";
 		windowScript = windowScript
 				+ "  // used for Validation and save,update and delete and get Data from DB.\n";
 		windowScript = windowScript + "TemplateWindowUtil windowUtil = null;\n";
 		windowScript = windowScript
-				+ "Vector<Template> rightPanelJtableTemplatedata = new Vector<Template>(); // used maintain data in rightPanel in center area.\n";
+				+ "Vector<"+getBeanName() +"> rightPanelJtableTemplatedata = new Vector<"+getBeanName() +">(); // used maintain data in rightPanel in center area.\n";
 
 		windowScript = windowScript + "/**\n";
 		windowScript = windowScript + "* @return the data\n";
 		windowScript = windowScript + "/\n";
-		windowScript = windowScript + "public Vector<Template> getData() {\n";
+		windowScript = windowScript + "public Vector<"+getBeanName() +"> getData() {\n";
 		windowScript = windowScript + "return rightPanelJtableTemplatedata;\n";
 		windowScript = windowScript + "}\n";
 
@@ -284,7 +316,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + " * @param data the data to set\n";
 		windowScript = windowScript + " */\n";
 		windowScript = windowScript
-				+ "public void setData(Vector<Template> data) {\n";
+				+ "public void setData(Vector<"+getBeanName() +"> data) {\n";
 		windowScript = windowScript + "//this.data = data;\n";
 		windowScript = windowScript + "rightPanelJtableTemplatedata = data;\n";
 		windowScript = windowScript + "}\n";
@@ -301,7 +333,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + "TemplateTextField";
 		windowScript = windowScript + "\"";
 		windowScript = windowScript
-				+ "); // search textfield in leftTopPanel Data\n";
+				+ ",15); // search textfield in leftTopPanel Data\n";
 
 		windowScript = windowScript + "// rightTopPanel Data\n";
 		windowScript = windowScript
@@ -327,7 +359,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + "} catch (CosmosException e) {\n";
 		windowScript = windowScript + "// TODO Auto-generated catch block\n";
 		windowScript = windowScript
-				+ "commonUTIL.displayError(TemplateConstants.WINDOW_NAME,";
+				+ "commonUTIL.displayError("+getBeanName()+"Constants.WINDOW_NAME,";
 		windowScript = windowScript + "\"";
 		windowScript = windowScript + "Constructor";
 		windowScript = windowScript + "\"";
@@ -346,29 +378,31 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 				+ "setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED, null, null));\n";
 		windowScript = windowScript + "setLayout(new BorderLayout()); \n";
 		windowScript = windowScript + "// add  model to table \n";
-		windowScript = windowScript
-				+ "model = new TemplateTableModelUtil(rightPanelJtableTemplatedata);\n";
-		windowScript = windowScript
-				+ " rightSideCenterTable.setModel(model); \n";
-
-		windowScript = windowScript
-				+ "createSingleSplitPaneLayout(CommonConstants.SPLITWINDOWLOCATION);	\n";
+	//	windowScript = windowScript
+	//			+ "model = new TemplateTableModelUtil(rightPanelJtableTemplatedata);\n";
+		windowScript = windowScript +hieraricalTable;
+				//+ " rightSideCenterTable.setModel(model); \n" ; // hierarachical variable
+        if(!isWindowChild) {
+		windowScript = windowScript 	+ "createSingleSplitPaneLayout(CommonConstants.SPLITWINDOWLOCATION);	\n"+addComboBoxColumnScript;
+        } else {
+        	windowScript = windowScript 	+ "createSingleSplitPaneLayout();\n"+addComboBoxColumnScript;
+        }
 		windowScript = windowScript
 				+ "setSize(CommonConstants.WINDOWWIDTH , CommonConstants.WINDOWHIGHT); \n";
 		windowScript = windowScript + "}\n";
 
 		windowScript = windowScript + "/**\n";
-		windowScript = windowScript + "* @return the Template\n";
+		windowScript = windowScript + "* @return the "+getBeanName() +"\n";
 		windowScript = windowScript + " */\n";
-		windowScript = windowScript + "public Template getTemplate() {\n";
+		windowScript = windowScript + "public "+getBeanName() +" get"+getBeanName()+" () {\n";
 		windowScript = windowScript + "return template;\n";
 		windowScript = windowScript + "}\n";
 
 		windowScript = windowScript + "/**\n";
-		windowScript = windowScript + "* @param Template the Template to set\n";
+		windowScript = windowScript + "* @param "+getBeanName() +" the "+getBeanName() +" to set\n";
 		windowScript = windowScript + " */\n";
 		windowScript = windowScript
-				+ "public void setTemplate(Template template) {\n";
+				+ "public void set"+getBeanName()+" ("+getBeanName() +" template) {\n";
 		windowScript = windowScript + "this.template = template;\n";
 		windowScript = windowScript + "}\n";
 
@@ -432,7 +466,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		// TODO Auto-generated method stub
 
 		windowScript = windowScript
-				+ " templateSearchTextField.setName(TemplateConstants.SEARCHTEXTBOX); \n";
+				+ " templateSearchTextField.setName("+beanName+"Constants.SEARCHTEXTBOX); \n";
 		windowScript = windowScript
 				+ "leftTopbuttonsPanel.add(templateLabelName);\n";
 		windowScript = windowScript
@@ -454,11 +488,11 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript
 				+ "public void createPropertyPaneTable() {\n";
 		// TODO Auto-generated method stub
-
+            String bb = getBeanName();
 		windowScript = windowScript
-				+ "propertyTable = new TemplatePropertyTable(TemplateConstants.WINDOW_NAME,template);\n";
+				+ "propertyTable = new TemplatePropertyTable("+bb+"Constants.WINDOW_NAME,template);\n";
 		windowScript = windowScript
-				+ " setLeftSidePropertyPanePanel(propertyTable.getPropertyTable(generateProperty(TemplateConstants.WINDOW_NAME) ));\n";
+				+ " setLeftSidePropertyPanePanel(propertyTable.getPropertyTable(generateProperty("+bb+"Constants.WINDOW_NAME) ));\n";
 
 		windowScript = windowScript + "}\n";
 
@@ -466,12 +500,40 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript
 				+ "public void addCenterRightSidePanelComponents() {\n";
 		windowScript = windowScript + "// TODO Auto-generated method stub\n";
-		windowScript = windowScript
+		if(isWindowHier)
+			windowScript = windowScript 
+			+ "scrollPane.getViewport().add(hierarchicalTable);\n";
+		windowScript = windowScript 
 				+ "centerRightSidePanel.add(scrollPane, BorderLayout.CENTER);\n";
 		windowScript = windowScript + "}\n";
+		windowScript = windowScript + "@Override\n";
+		windowScript = windowScript + "public JPanel createChildPanel(int parentID) {\n";
+			// TODO Auto-generated method stub
+		   if(isWindowChild)
+			   windowScript = windowScript + getChildWindowScript();
+		   else 
+				windowScript = windowScript + "return null;\n";
+		   
+				windowScript = windowScript + "}\n";
+
+						windowScript = windowScript + "@Override\n";
+								windowScript = windowScript + "public JPanel createChildPanel(String id) {\n";
+			// TODO Auto-generated method stub
+										windowScript = windowScript + "	return null;\n";
+										windowScript = windowScript + "}\n";
 		windowScript = windowScript + "}\n";
 
 		return windowScript;
+	}
+
+	private boolean isWindowChild(String windowName) {
+		// TODO Auto-generated method stub
+		String isChildSQL = WindowSheetConstants.ISCHILDSQL + "'"+windowName+"'";
+		Vector<WindowSheet> ws = (Vector<WindowSheet>) ReferenceDataCache.selectWhere(isChildSQL,WindowSheetConstants.WINDOW_NAME);
+		if(!commonUTIL.isEmpty(ws) && ws.size() > 0)
+			return true;
+		
+		return false;
 	}
 
 	public String createPropertyTableWindowScript(String windowName) {
@@ -482,29 +544,29 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript
 				+ "import java.beans.PropertyChangeEvent;\n";
 		windowScript = windowScript + "import java.util.List;\n";
-		windowScript = windowScript + "import beans.Template;\n";
+		windowScript = windowScript + "import beans."+getBeanName() +";\n";
 		windowScript = windowScript + "import com.jidesoft.grid.Property;\n";
 
 		windowScript = windowScript
 				+ "public class TemplatePropertyTable  extends WindowPropertyTable   {\n";
 
 		windowScript = windowScript
-				+ "List< Property> templateProperties = null;\n";
-		windowScript = windowScript + "public Template template ;\n";
+				+ "List<Property> templateProperties = null;\n";
+		windowScript = windowScript + "public "+getBeanName() +" template ;\n";
 		windowScript = windowScript + "@Override\n";
 		windowScript = windowScript
 				+ "public void propertyChange(PropertyChangeEvent evt) {\n";
 		windowScript = windowScript + "}\n";
 		// name of the window
 		windowScript = windowScript
-				+ "public TemplatePropertyTable(String name,Template template ) {\n";
+				+ "public TemplatePropertyTable(String name,"+getBeanName() +" template ) {\n";
 		windowScript = windowScript + "this.name = name;\n";
-		windowScript = windowScript + "setTemplate(template);\n";
+		windowScript = windowScript + "set"+getBeanName() +"(template);\n";
 		windowScript = windowScript + "}\n";
 
 		windowScript = windowScript + "@Override\n";
 		windowScript = windowScript
-				+ "public List< Property> addListenerToProperty(List< Property> properties) {\n";
+				+ "public List< Property> addListenerToProperty(List<Property> properties) {\n";
 		windowScript = windowScript + "return properties;\n";
 		windowScript = windowScript + "}\n";
 		windowScript = windowScript + "// add listener to the property\n";
@@ -516,7 +578,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + "/**\n";
 		windowScript = windowScript + "* @return the template\n";
 		windowScript = windowScript + "*/\n";
-		windowScript = windowScript + "public Template getTemplate() {\n";
+		windowScript = windowScript + "public "+getBeanName() +" get"+getBeanName() +"() {\n";
 		windowScript = windowScript + "return template;\n";
 		windowScript = windowScript + "}\n";
 
@@ -524,7 +586,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + "* @param template the template to set\n";
 		windowScript = windowScript + "*/\n";
 		windowScript = windowScript
-				+ "public void setTemplate(Template bean) {\n";
+				+ "public void set"+getBeanName() +"("+getBeanName() +" bean) {\n";
 		windowScript = windowScript + "this.template = bean;\n";
 		windowScript = windowScript + "}\n";
 
@@ -535,27 +597,30 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 
 	public String createWindowUtilScript(String windowName) {
 		String windowScript = "";
+		String startDataScriptForComboxColumn = addScriptInStartDataMethodComboxColumn(windowName);
+		String beanName = getBeanConstantName(getBeanName());
 		windowScript = windowScript
 				+ "package apps.window.staticwindow.util; \n\n\n import java.util.Vector;\n";
 
 		windowScript = windowScript
 				+ "import apps.window.util.tableModelUtil.TableUtils;";
-		windowScript = windowScript + "import util.ReferenceDataCache;\n";
+		windowScript = windowScript + "import util.cacheUtil.ReferenceDataCache;\n";
 		windowScript = windowScript + "import util.commonUTIL;\n";
 		windowScript = windowScript
 				+ "import apps.window.staticwindow.BasePanel;\n";
 		windowScript = windowScript
 				+ "import apps.window.staticwindow.TemplateWindow;\n";
-		windowScript = windowScript + "import beans.Template; \n";
+		windowScript = windowScript + "import beans."+getBeanName() +"; \n";
 		windowScript = windowScript + "import beans.WindowSheet;\n";
 		windowScript = windowScript + "import com.jidesoft.grid.Property;\n";
 		windowScript = windowScript + "import constants.CommonConstants;\n";
-		windowScript = windowScript + "import constants.TemplateConstants;\n";
+		windowScript = windowScript + "import constants."+getBeanName() +"Constants;\n";
+		windowScript = windowScript + "import constants.BeanConstants;\n";
 
 		windowScript = windowScript
 				+ "public class TemplateWindowUtil extends BaseWindowUtil {\n";
 		windowScript = windowScript + " TemplateWindow templateWindow= null;\n";
-		windowScript = windowScript + "Template template = null;\n";
+		windowScript = windowScript + getBeanName()+" template = null;\n";
 		windowScript = windowScript + " String templateName;\n";
 
 		windowScript = windowScript + "/**\n";
@@ -563,7 +628,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + " */\n";
 		windowScript = windowScript + "public String getWindowName() {\n";
 		windowScript = windowScript
-				+ "	return TemplateConstants.WINDOW_NAME;\n";
+				+ "	return "+getBeanName() +"Constants.WINDOW_NAME;\n";
 		windowScript = windowScript + "}\n";
 
 		windowScript = windowScript + "	/**\n";
@@ -578,7 +643,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + "/**\n";
 		windowScript = windowScript + " * @return the template\n";
 		windowScript = windowScript + " */\n";
-		windowScript = windowScript + "	public Template getTemplate() {\n";
+		windowScript = windowScript + "	public "+ getBeanName()+" get"+getBeanName() +"() {\n";
 		windowScript = windowScript + "	return template;\n";
 		windowScript = windowScript + "	}\n";
 
@@ -587,7 +652,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 				+ " * @param template the template to set\n";
 		windowScript = windowScript + "	 */\n";
 		windowScript = windowScript
-				+ "public void setTemplate(Template template) {\n";
+				+ "public void set"+getBeanName() +"("+ getBeanName()+"  template) {\n";
 		windowScript = windowScript + "	  this.template = template;\n}";
 		windowScript = windowScript + "@Override\n";
 		windowScript = windowScript + "public boolean validate( ) {\n";
@@ -595,7 +660,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + "		boolean flag = false;\n";
 
 		windowScript = windowScript
-				+ "			return validate(getTemplate(),TemplateConstants.WINDOW_NAME);\n";
+				+ "			return validate(get"+getBeanName() +"(),"+getBeanName()+"Constants.WINDOW_NAME);\n";
 
 		windowScript = windowScript + "			}\n";
 
@@ -627,7 +692,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 
 		windowScript = windowScript + "	}\n";
 		windowScript = windowScript
-				+ "	if(action.equalsIgnoreCase(TemplateConstants.SEARCHTEXTBOX)) {\n";
+				+ "	if(action.equalsIgnoreCase("+getBeanName()+"Constants.SEARCHTEXTBOX)) {\n";
 		windowScript = windowScript + "searchTextAction();\n";
 		windowScript = windowScript + "	}\n";
 
@@ -643,6 +708,12 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 				+ "if(action.equalsIgnoreCase(CommonConstants.SAVEBUTTON)) {\n";
 		windowScript = windowScript + "saveButtonAction();\n";
 		windowScript = windowScript + "}\n";
+		windowScript = windowScript +"if (action.equalsIgnoreCase(CommonConstants.HIERARACHICALTABLE)) {\n";
+		windowScript = windowScript +	"hierarachicalTableAction();\n";
+		windowScript = windowScript +" }\n";
+		windowScript = windowScript +" if (action.equalsIgnoreCase("+getBeanName()+"Constants.LOADALL"+getBeanName().toUpperCase()+")) {\n";
+				windowScript = windowScript +" 	loadButtonAction();\n";
+		windowScript = windowScript +" }\n";
 		windowScript = windowScript + "	}				\n";
 
 		windowScript = windowScript + "@Override\n";
@@ -652,26 +723,34 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript
 				+ "	templateWindow = (TemplateWindow)windowName;\n";
 		windowScript = windowScript
-				+ "setTemplate(templateWindow.getTemplate()); \n";
+				+ "set"+getBeanName() +"(templateWindow.get"+getBeanName() +"()); \n";
 
 		windowScript = windowScript + "}\n";
-
+		windowScript = windowScript + "private void hierarachicalTableAction() {\n";
+			// TODO Auto-generated method stub
+				windowScript = windowScript + "	if (templateWindow.hierarchicalTable.getSelectedRow() != -1) {\n";
+						windowScript = windowScript + "			templateWindow.propertyTable.setPropertiesValues(templateWindow.model.getRow(templateWindow.hierarchicalTable.getSelectedRow()));\n";
+								windowScript = windowScript + "		templateWindow.set"+getBeanName() +"(templateWindow.model.getRow(templateWindow.hierarchicalTable.getSelectedRow()));\n";
+										windowScript = windowScript + "		set"+getBeanName() +"(templateWindow.model.getRow(templateWindow.hierarchicalTable.getSelectedRow()));\n";
+										windowScript = windowScript + "		}\n";
+			
+										windowScript = windowScript + "	}\n";
 		windowScript = windowScript + "private void saveButtonAction() {\n";
 		// TODO Auto-generated method stub
 		windowScript = windowScript + "templateWindow.propertyTable\n";
 		windowScript = windowScript + ".setfillValues(template);\n";
 		windowScript = windowScript
-				+ "setTemplate((Template) templateWindow.propertyTable.getBean());\n";
+				+ "set"+getBeanName() +"(("+getBeanName() +") templateWindow.propertyTable.getBean());\n";
 		windowScript = windowScript + "//if(validate( )) \n";
 
 		windowScript = windowScript
-				+ "// if(ReferenceDataCache.updateTemplate(getTemplate())) {\n";
+				+ "// if(ReferenceDataCache.updateTemplate(get"+getBeanName() +"())) {\n";
 		windowScript = windowScript
 				+ "//if(templateWindow.rightSideCenterTable.getSelectedRow() != -1) {\n";
 		windowScript = windowScript
 				+ "	 // int i=  TableUtils.getSelectedRowIndex( templateWindow.rightSideCenterTable);\n";
 		windowScript = windowScript
-				+ "	  //templateWindow.model.udpateValueAt(getTemplate(), i, 0);\n";
+				+ "	  //templateWindow.model.udpateValueAt(get"+getBeanName() +"(), i, 0);\n";
 		windowScript = windowScript + " //}\n";
 
 		windowScript = windowScript + " //}\n";
@@ -679,18 +758,18 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + "}		\n";
 		windowScript = windowScript
 				+ "private void saveAsNewButtonAction() { \n";
-		windowScript = windowScript + "Template template = new Template();\n";
+		windowScript = windowScript + ""+getBeanName() +" template = new "+getBeanName() +"();\n";
 		windowScript = windowScript
 				+ "	templateWindow.propertyTable.setfillValues(template);\n";
-		windowScript = windowScript + "	 setTemplate(template);\n";
+		windowScript = windowScript + "	 set"+getBeanName() +"(template);\n";
 
 		windowScript = windowScript + "//if(validate( )){\n";
 		windowScript = windowScript
-				+ "// template = ReferenceDataCache.saveTemplate(template); \n";
+				+ "// template = ReferenceDataCache.save"+getBeanName() +"(template); \n";
 		windowScript = windowScript
-				+ " // templateWindow.model.addRow(getTemplate());\n";
+				+ " // templateWindow.model.addRow(get"+getBeanName() +"());\n";
 		 
-		windowScript = windowScript + " // setTemplate(template);\n";
+		windowScript = windowScript + " // set"+getBeanName() +"(template);\n";
 
 		windowScript = windowScript + "  //}\n";
 		windowScript = windowScript + "}\n";
@@ -699,7 +778,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript
 				+ "templateWindow.propertyTable.clearPropertyValues();\n";
 		windowScript = windowScript + "templateWindow.model.clear();\n";
-		windowScript = windowScript + "setTemplate(null);\n";
+		windowScript = windowScript + "set"+getBeanName() +"(null);\n";
 		windowScript = windowScript + "	}\n";
 
 		windowScript = windowScript + "private void loadButtonAction() {\n";
@@ -709,21 +788,45 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript
 				+ " if(!commonUTIL.isEmpty(searchText)) {\n";
 		windowScript = windowScript
-				+ "Vector<Template> data = null;//ReferenceDataCache.selectTemplates(searchText);\n";
+				+ "Vector<"+getBeanName() +"> data = null;//ReferenceDataCache.select"+getBeanName() +"s(searchText);\n";
 		windowScript = windowScript + "templateWindow.model.clear();\n";
 		windowScript = windowScript + "if(!commonUTIL.isEmpty(data)) {\n";
-		windowScript = windowScript + "Template firstRecord = data.get(0);\n";
+		windowScript = windowScript + ""+getBeanName() +" firstRecord = data.get(0);\n";
 		windowScript = windowScript + "for(int i=0;i<data.size();i++) {\n";
 		windowScript = windowScript
-				+ " templateWindow.model.addRow((Template)data.get(i));\n";
+				+ " templateWindow.model.addRow(("+getBeanName() +")data.get(i));\n";
 		windowScript = windowScript + "				}\n";
 		windowScript = windowScript
 				+ "				templateWindow.propertyTable.setPropertiesValues(firstRecord);\n";
-		windowScript = windowScript + "				 setTemplate(firstRecord);\n";
-		windowScript = windowScript + "		}\n";
-
+		windowScript = windowScript + "				 set"+getBeanName() +"(firstRecord);\n";
+		windowScript = windowScript + "		} \n}else {\n";
+		windowScript = windowScript + "		Vector<"+getBeanName() +"> data = (Vector<"+getBeanName() +">) ReferenceDataCache.selectALLData("+beanName+");\n";
+				windowScript = windowScript + "		if (!commonUTIL.isEmpty(data)) {\n";
+				windowScript = windowScript + "templateWindow.model.clear();\n";
+						windowScript = windowScript + "			"+getBeanName() +" firstRecord = data.get(0);\n";
+								windowScript = windowScript + "			for (int i = 0; i < data.size(); i++) {\n";
+										windowScript = windowScript + "					templateWindow.model.addRow(("+getBeanName() +") data.get(i));\n";
+										windowScript = windowScript + "				}\n";
+												windowScript = windowScript + "				templateWindow.propertyTable.setPropertiesValues(firstRecord);\n";
+														windowScript = windowScript + "		set"+getBeanName() +"(firstRecord);\n";
+														windowScript = windowScript + "			}\n";
 		windowScript = windowScript + "	 }\n";
 		windowScript = windowScript + "}\n";
+		windowScript = windowScript + "public void loadData(int id) {\n";
+				windowScript = windowScript + "		newButtonAction();\n";
+		 
+						windowScript = windowScript + "		Vector<"+getBeanName() +"> data = null;// ReferenceDataCache.get"+getBeanName() +"(id);\n";
+								windowScript = windowScript + "			templateWindow.model.clear();\n";
+										windowScript = windowScript + "			if (!commonUTIL.isEmpty(data)) {\n";
+				 	windowScript = windowScript + "				"+getBeanName() +" firstRecord = data.get(0);\n";
+				 			windowScript = windowScript + "				for (int i = 0; i < data.size(); i++) {\n";
+				 					windowScript = windowScript + "			templateWindow.model.addRow(("+getBeanName() +") data.get(i));\n";
+				 					windowScript = windowScript + "				}\n";
+				 							windowScript = windowScript + "				templateWindow.propertyTable.setPropertiesValues(firstRecord);\n";
+				 									windowScript = windowScript + "				set"+getBeanName() +"(firstRecord);\n";
+	 		 
+				 									windowScript = windowScript + "	}\n";
+				 									windowScript = windowScript + "	}\n";
 
 		windowScript = windowScript
 				+ " private void rightSideCenterTableAction() {\n";
@@ -732,9 +835,9 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript
 				+ "		 templateWindow.propertyTable.setPropertiesValues( templateWindow.model.getRow(templateWindow.rightSideCenterTable.getSelectedRow()));\n";
 		windowScript = windowScript
-				+ "	templateWindow.setTemplate(templateWindow.model.getRow(templateWindow.rightSideCenterTable .getSelectedRow()));\n";
+				+ "	templateWindow.set"+getBeanName() +"(templateWindow.model.getRow(templateWindow.rightSideCenterTable .getSelectedRow()));\n";
 		windowScript = windowScript
-				+ "	setTemplate(templateWindow.model .getRow(templateWindow.rightSideCenterTable .getSelectedRow()));\n";
+				+ "	set"+getBeanName() +"(templateWindow.model .getRow(templateWindow.rightSideCenterTable .getSelectedRow()));\n";
 		windowScript = windowScript + "}\n";
 
 		windowScript = windowScript + "private void searchTextAction() {\n";
@@ -750,13 +853,13 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript
 				+ "	//templateWindow.model.delRow(templateWindow.rightSideCenterTable.getSelectedRow()); \n";
 		windowScript = windowScript + "	//}\n";
-		windowScript = windowScript + "//setTemplate(null);\n";
+		windowScript = windowScript + "//set"+getBeanName() +"(null);\n";
 		windowScript = windowScript
 				+ " //templateWindow.propertyTable.clearPropertyValues();\n";
 		windowScript = windowScript + "//}	\n";
 		windowScript = windowScript + "} catch(Exception e) {\n";
 		windowScript = windowScript
-				+ "commonUTIL.displayError(TemplateConstants.WINDOW_NAME+";
+				+ "commonUTIL.displayError("+getBeanName()+"Constants.WINDOW_NAME+";
 		windowScript = windowScript + "\"";
 		windowScript = windowScript + "Util";
 		windowScript = windowScript + "\"";
@@ -771,7 +874,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 
 		// this method is required to get any data from db to populate Window.
 		windowScript = windowScript + "@Override\n";
-		windowScript = windowScript + "public void windowstartUpData() {\n";
+		windowScript = windowScript + "public void windowstartUpData() {\n" + startDataScriptForComboxColumn;
 		// TODO Auto-generated method stub
 		windowScript = windowScript + " \n";
 		windowScript = windowScript + "\n}";
@@ -783,6 +886,10 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + "}\n}";
 		return windowScript;
 	}
+	
+	public String getBeanConstantName(String beanName) {
+		return "BeanConstants."+getBeanName().toUpperCase();
+	}
 
 	public String createWindowTableModelUtil(String windowName) {
 		addColMap("BookNameWindow", "Book", "BookNo", "Book_no");
@@ -791,15 +898,23 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		String col = getColumnName(windowName);
 		String switchCase = getSwitchCaseMapping(windowName);
 		String classTypeMethod = getColumnClassDataType(windowName);
+		String editColumnScript = getEditingOnColumn(windowName);
+		String valueAt = getValueAtScriptMethod(windowName);
 		String windowScript = "";
 		windowScript = windowScript
 				+ "package apps.window.util.tableModelUtil;\n";
 		windowScript = windowScript + "import java.util.Vector;\n";
+		windowScript = windowScript + "import com.jidesoft.grid.HierarchicalTableModel;\n";
 		windowScript = windowScript
 				+ "import javax.swing.table.AbstractTableModel;\n";
-		windowScript = windowScript + " import beans.Template;\n";
+		windowScript = windowScript + " import beans."+getBeanName() +";\n";
 		windowScript = windowScript
-				+ " public class TemplateTableModelUtil extends AbstractTableModel {\n";
+				+ " public class TemplateTableModelUtil extends " +
+				"AbstractTableModel ";
+		if(isWindowHier) 
+			windowScript = windowScript 			+ "implements HierarchicalTableModel";
+		windowScript = windowScript
+				+ " { \n";
 
 		windowScript = windowScript + "		final String[] columnNames;  \n";
 		windowScript = windowScript + "		 String col[] =" + col + " ;\n";
@@ -807,19 +922,19 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + " /**\n";
 		windowScript = windowScript + "	 * @return the data\n";
 		windowScript = windowScript + "	 */\n";
-		windowScript = windowScript + "public Vector<Template> getData() {\n";
+		windowScript = windowScript + "public Vector<"+getBeanName() +"> getData() {\n";
 		windowScript = windowScript + "	return mydata;\n";
 		windowScript = windowScript + "	}\n";
 
-		windowScript = windowScript + "	final Vector<Template> mydata;   \n";
+		windowScript = windowScript + "	final Vector<"+getBeanName() +"> mydata;   \n";
 
 		windowScript = windowScript
-				+ " public TemplateTableModelUtil( Vector<Template> data  ) {\n";
+				+ " public TemplateTableModelUtil( Vector<"+getBeanName() +"> data  ) {\n";
 		windowScript = windowScript + "		 	this.columnNames = col;\n";
 		windowScript = windowScript + "		this.mydata = data;   \n";
 		windowScript = windowScript + "	}   \n";
 		windowScript = windowScript
-				+ " public TemplateTableModelUtil( Vector<Template> data ,String [] col ) {  \n";
+				+ " public TemplateTableModelUtil( Vector<"+getBeanName() +"> data ,String [] col ) {  \n";
 		windowScript = windowScript + "	 	this.columnNames = col;\n";
 		windowScript = windowScript + "	this.mydata = data;   \n";
 		windowScript = windowScript + "		}   \n";
@@ -833,7 +948,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 
 		windowScript = windowScript + "			 }  \n";
 		windowScript = windowScript
-				+ "			 public Template getRow(int i) {   \n";
+				+ "			 public "+getBeanName() +" getRow(int i) {   \n";
 		windowScript = windowScript + "			     return mydata.get(i)  ; \n";
 
 		windowScript = windowScript + "			 }\n";
@@ -841,28 +956,53 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 				+ "			 public String getColumnName(int col) {  \n";
 		windowScript = windowScript + "		     return columnNames[col];  \n";
 		windowScript = windowScript + "		 }   \n";
+		
+		if(isWindowHier) {
+			windowScript = windowScript + "@Override\n";
+			windowScript = windowScript + 			 "public Object getChildValueAt(int arg0) {\n";
+						// TODO Auto-generated method stub
+				windowScript = windowScript + 				 "return null;\n";
+				windowScript = windowScript + 			 "}\n";
+
+			windowScript = windowScript + 			 "@Override\n";
+					windowScript = windowScript + 			 "public boolean hasChild(int arg0) {\n";
+						// TODO Auto-generated method stub
+				windowScript = windowScript + 				 "return true;\n";
+				windowScript = windowScript + 			 "}\n";
+
+			windowScript = windowScript + 			 "@Override\n";
+					windowScript = windowScript + 			 "public boolean isExpandable(int arg0) {\n";
+						// TODO Auto-generated method stub
+				windowScript = windowScript + 					 "return true;\n";
+					
+				windowScript = windowScript + 			 "}\n";
+
+			windowScript = windowScript + 			 "@Override\n";
+					windowScript = windowScript + 			 "public boolean isHierarchical(int arg0) {\n";
+						// TODO Auto-generated method stub
+				windowScript = windowScript + 				 "return true;\n";
+				windowScript = windowScript + 			 "}\n";
+		}
 		windowScript = windowScript
 				+ " public Object getValueAt(int row, int col) {   \n";
 		windowScript = windowScript + "		     Object value = null;  	 \n";
 
 		windowScript = windowScript
-				+ "		     Template  template = (Template) mydata.get(row);	\n";
+				+ "		     "+getBeanName() +"  template = ("+getBeanName() +") mydata.get(row);	\n";
 		windowScript = windowScript + "  switch (col) { " + switchCase + " }\n";
 		windowScript = windowScript + " return value;}   \n " +classTypeMethod;
 
-		windowScript = windowScript
-				+ " public boolean isCellEditable(int row, int col) {   \n";
-		windowScript = windowScript + "  return false;   \n";
-		windowScript = windowScript + "		  }   \n";
+		windowScript = windowScript + editColumnScript;
+				 
 		windowScript = windowScript
 				+ "  public void setValueAt(Object value, int row, int col) {   \n";
 
-		windowScript = windowScript + "  if(value instanceof Template) {\n";
+		windowScript = windowScript + "  if(value instanceof "+getBeanName() +") {\n";
 		windowScript = windowScript
-				+ "	 	 mydata.set(row,(Template ) value) ;\n";
+				+ "	 	 mydata.set(row,("+getBeanName() +" ) value) ;\n";
 		windowScript = windowScript
 				+ "			     this.fireTableDataChanged();      \n";
-		windowScript = windowScript + " }\n";
+		windowScript = windowScript + " }\n"+valueAt;
 
 		windowScript = windowScript + " }   \n";
 		windowScript = windowScript + " public void clear() {\n";
@@ -871,7 +1011,7 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		windowScript = windowScript + "}\n";
 		windowScript = windowScript + " public void addRow(Object value) {  \n";
 
-		windowScript = windowScript + " mydata.add((Template ) value) ;\n";
+		windowScript = windowScript + " mydata.add(("+getBeanName() +" ) value) ;\n";
 		windowScript = windowScript + "this.fireTableDataChanged(); \n";
 
 		windowScript = windowScript + " }   	\n";
@@ -884,13 +1024,30 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 
 		windowScript = windowScript
 				+ "public void udpateValueAt(Object value, int row, int col) {\n";
-		windowScript = windowScript + "	 mydata.set(row,(Template) value) ;\n";
+		windowScript = windowScript + "	 mydata.set(row,("+getBeanName() +") value) ;\n";
 		windowScript = windowScript + "    fireTableCellUpdated(row, col); \n";
 
 		windowScript = windowScript + "} \n}";
 
 		return windowScript;
 
+	}
+	
+	private String getValueAtScriptMethod(String windowName2) {
+		String valueAt = " ";
+		Vector<WindowTableModelMapping> maps = getMapColumns(windowName2);
+		for (int i = 0; i < maps.size(); i++) {
+			
+			WindowTableModelMapping mp = maps.get(i);
+			if(mp.IsCombobox()) {
+				valueAt = valueAt + "  \n if(value instanceof String) {\n";
+				valueAt = valueAt + getBeanName()+" cc = mydata.get(row);\n";
+				valueAt = valueAt +  "cc.set" + mp.getMethodName() + "((String) value);\n this.fireTableDataChanged(); \n}\n";
+				
+			}
+		}
+		
+		return valueAt;
 	}
 
 	private String getSwitchCaseMapping(String windowName2) {
@@ -906,6 +1063,39 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 
 		}
 		return switchcase;
+	}
+	
+	
+	
+	private String addScriptInStartDataMethodComboxColumn(String window) {
+		String startUPScript = "";
+		Vector<WindowTableModelMapping> maps = getMapColumns(window);
+		for (int i = 0; i < maps.size(); i++) {
+			WindowTableModelMapping mp = maps.get(i);
+			if(mp.IsCombobox()) {
+			startUPScript =startUPScript+"Vector<String>"+ mp.getStartUpdataName()+"Data=	ReferenceDataCache.getStarupData(";
+			startUPScript = startUPScript + "\"";
+			startUPScript = startUPScript + mp.getStartUpdataName(); 
+					startUPScript = startUPScript + "\"";
+			startUPScript = startUPScript+" );\n";
+			startUPScript =startUPScript+" templateWindow."+mp.getStartUpdataName()+"Data= commonUTIL.convertStartupVectortoStringArray("+mp.getStartUpdataName()+"Data );\n ";
+			}
+		}
+		return startUPScript;
+	}
+	
+	
+	private String getVariableForComboxColumn(String windowName2) {
+		// TODO Auto-generated method stub
+
+		String variableName = "";
+		Vector<WindowTableModelMapping> maps = getMapColumns(windowName2);
+		for (int i = 0; i < maps.size(); i++) {
+			WindowTableModelMapping mp = maps.get(i);
+			if(mp.IsCombobox())
+			variableName = variableName +"public String [] "+mp.getStartUpdataName()+"Data;\n";
+		}
+		return variableName;
 	}
 	// add this method later. 
 	private void addCustomColumnMethod(Vector<String> customColumns,String windowName2) {
@@ -959,6 +1149,94 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 		col = col.substring(0, col.length() - 1) + "}";
 		return col;
 	}
+	
+	private String getHierarachicalModel(String windowName) {
+		String hierarachicalModel = "rightSideCenterTable.setModel(model);";
+		if(isWindowChild)
+			hierarachicalModel = "model = new TemplateTableModelUtil(rightPanelJtableTemplatedata); \n";
+		Vector<WindowSheet> maps = getWindowColumns(windowName);
+		for (int i = 0; i < maps.size(); i++) {
+			WindowSheet mp = maps.get(i);
+			if(mp.isMapJavaObject()) {
+				setBeanName(mp.getJavaObjectName());
+				
+			}
+			if(mp.IsHierarachicalWindow()) {
+				isWindowHier = true;
+				hierarachicalModel = "";
+				hierarachicalModel = "//\n"+hierarachicalModel;
+				hierarachicalModel = hierarachicalModel + "model = new TemplateTableModelUtil(rightPanelJtableTemplatedata); \n";
+				hierarachicalModel = hierarachicalModel + " // adding model  \n";
+				hierarachicalModel = hierarachicalModel + " hierarchicalTable = createTable(model,new "+mp.getChildWindowName()+"Window());\n";	
+				hierarachicalModel = hierarachicalModel + "setEventListener(hierarchicalTable);";
+				 
+			}  
+		}
+		return hierarachicalModel;
+		
+	}
+	private String getEditingOnColumn (String windowName2) {
+		// TODO Auto-generated method stub
+		String editColumn = "";
+		Vector<WindowTableModelMapping> maps = getMapColumns(windowName2);
+		editColumn = editColumn +"public boolean isCellEditable(int row, int col) {\n";
+		for (int i = 0; i < maps.size(); i++) {
+			WindowTableModelMapping mp = maps.get(i);
+		
+			if(mp.IsCombobox()) {
+			editColumn = editColumn +"	if(col == "+i+" )\n";
+			editColumn = editColumn +"		return true;\n";
+			}
+				
+			}
+		editColumn = editColumn + " return false;\n}\n\n\n";
+		return editColumn;
+		}   
+	
+
+	 private String getChildWindowScript() {
+		 String childWindowScript = "";
+		 childWindowScript = childWindowScript+"JPanel panel = new JPanel();\n";
+		 childWindowScript = childWindowScript+"panel.setLayout(new BorderLayout());\n";
+				 childWindowScript = childWindowScript+" windowUtil.loadData(parentID); // setting data in Model for all details record of parent id.\n";
+						 childWindowScript = childWindowScript+" rightSideCenterTable.setModel(model);  // rightSideCenterTable is used to show all details records of Parent id.\n"; 
+			 
+								 childWindowScript = childWindowScript+" panel.add(new JScrollPane(rightSideCenterTable), BorderLayout.CENTER);\n";
+			 
+										 childWindowScript = childWindowScript+"return panel;\n";
+										 return childWindowScript;
+	 }
+		 
+	
+	
+	
+	private String getComboxOnColumn(String windowName) {
+		Vector<WindowTableModelMapping> maps = getMapColumns(windowName);
+		String table = "rightSideCenterTable";
+				if(isWindowHier) 
+					table = "hierarchicalTable";
+		String comboxColumn = "";
+		for (int i = 0; i < maps.size(); i++) {
+			WindowTableModelMapping mp = maps.get(i);
+			 if(mp.IsCombobox()) {
+			comboxColumn = comboxColumn +table+".getColumnModel().getColumn("+i+ ").setCellEditor(new TextFieldCellEditor(String.class) {\n";
+			comboxColumn = comboxColumn +"@Override\n";
+			comboxColumn = comboxColumn +	"protected JTextField createTextField() {\n";
+			comboxColumn = comboxColumn +	"		JTextField cellEditorTextField = new JTextField();\n";
+	       comboxColumn = comboxColumn +	"		ListDataIntelliHints fontIntellihints = new ListDataIntelliHints<String>(\n";
+	       comboxColumn = comboxColumn +					"cellEditorTextField,"+ mp.getStartUpdataName()+"Data);\n";
+	       comboxColumn = comboxColumn +			"fontIntellihints.setCaseSensitive(false);\n";
+	       comboxColumn = comboxColumn +				"return cellEditorTextField;\n";
+	       comboxColumn = comboxColumn +		  " }";
+		 comboxColumn = comboxColumn +	" });\n";
+			 }
+		}
+
+		 
+		return comboxColumn;
+		
+	}
+	 
 
 	public void addColMap(String windowName, String beanName,
 			String columnName, String methodName) {
@@ -976,7 +1254,12 @@ public class JavaScriptWindowUtil extends BaseWindowUtil {
 
 		return mp;
 	}
+	public Vector<WindowSheet> getWindowColumns(String windowName) {
+		Vector<WindowSheet> mp = ReferenceDataCache.selectWindowSheets(windowName, WindowSheetConstants.WINDOW);
+				 
 
+		return mp;
+	}
 	@Override
 	public void clearALL() {
 		// TODO Auto-generated method stub
