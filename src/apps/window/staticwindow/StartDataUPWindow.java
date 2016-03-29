@@ -530,4 +530,16 @@ list.add(valueTextField);
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public JPanel createChildPanel(int id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public JPanel createChildPanel(String id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

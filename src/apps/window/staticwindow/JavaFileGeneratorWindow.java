@@ -219,4 +219,16 @@ public class JavaFileGeneratorWindow extends BasePanel {
 			jPanel1.add(scrollPane,new Constraints(new Leading(4, 680, 12, 12), new Leading(3, 214, 12, 12)));
 		    centerRightSidePanel.add(jPanel1);
 		}
+
+		@Override
+		public JPanel createChildPanel(int id) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public JPanel createChildPanel(String id) {
+			// TODO Auto-generated method stub
+			return null;
+		}
 }

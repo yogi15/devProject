@@ -176,4 +176,16 @@ public class WindowTableModelMappingWindow extends BasePanel {
 		// TODO Auto-generated method stub
 		centerRightSidePanel.add(scrollPane, BorderLayout.CENTER);
 	}
+
+	@Override
+	public JPanel createChildPanel(int id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public JPanel createChildPanel(String id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

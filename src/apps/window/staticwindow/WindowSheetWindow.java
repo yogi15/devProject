@@ -2,7 +2,9 @@ package apps.window.staticwindow;
 
 import java.awt.BorderLayout;
 import java.awt.Component; 
+import java.awt.Dimension;
 import java.util.ArrayList; 
+import java.util.List;
 import java.util.Vector;
 
  
@@ -15,10 +17,16 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder; 
+import javax.swing.table.DefaultTableModel;
 
 import org.dyno.visual.swing.layouts.Constraints;
 import org.dyno.visual.swing.layouts.GroupLayout;
 import org.dyno.visual.swing.layouts.Leading;
+
+import com.jidesoft.grid.SortableTable;
+import com.jidesoft.grid.TextFieldCellEditor;
+import com.jidesoft.hints.ListDataIntelliHints;
+import com.standbysoft.component.date.DateSelectionModel.SelectionMode;
 
 import util.CosmosException;
 import util.commonUTIL; 
@@ -86,12 +94,30 @@ public class WindowSheetWindow extends BasePanel {
 			/// init() data required while loading this window.
 			init();
 			
-			
+			final List<String> fontNames = new ArrayList<String>();
+			  fontNames.add("Testing");
+			  fontNames.add("eererer");
+			  fontNames.add("popoo");
+			  fontNames.add("kkkkk");
 			setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED, null, null));
 			setLayout(new BorderLayout()); 
 	      // add  model to table 
 	       model = new WindowSheetTableModelUtil(rightPanelJtableWindowSheetdata);
-	       rightSideCenterTable.setModel(model); 
+	      rightSideCenterTable.setModel(model); 
+
+	      rightSideCenterTable.getColumnModel().getColumn(1)
+	  	.setCellEditor(new TextFieldCellEditor(String.class) {
+	  		private static final long serialVersionUID = 2023654568542192380L;
+
+	  		@Override
+	  		protected JTextField createTextField() {
+	  			JTextField cellEditorTextField = new JTextField();
+	  			ListDataIntelliHints fontIntellihints = new ListDataIntelliHints<String>(
+	  					cellEditorTextField, fontNames);
+	  			fontIntellihints.setCaseSensitive(false);
+	  			return cellEditorTextField;
+	  		}
+	  	});
 	       
 	       
 		   createSingleSplitPaneLayout(CurrencyDefaultConstant.SPLITWINDOWLOCATION);	 
@@ -203,8 +229,50 @@ public class WindowSheetWindow extends BasePanel {
 			JPanel   jPanel1 = new JPanel();
 			jPanel1.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED, null, null));
 			jPanel1.setLayout(new GroupLayout());
-			jPanel1.add(textAreaScrollPane, new Constraints(new Leading(7, 674, 10, 10), new Leading(223, 231, 10, 10)));
-			jPanel1.add(scrollPane,new Constraints(new Leading(4, 680, 12, 12), new Leading(3, 214, 12, 12)));
+			jPanel1.add(textAreaScrollPane, new Constraints(new Leading(7, 1012, 12, 12), new Leading(223, 231, 10, 10)));
+			
+			jPanel1.add( scrollPane,new Constraints(new Leading(4, 1018, 10, 10), new Leading(3, 214, 12, 12)));
 		    centerRightSidePanel.add(jPanel1);
+		}
+		
+		public JScrollPane getPanel(JScrollPane scrollPane,WindowSheetTableModelUtil model ) {
+			 
+			 
+			  final List<String> fontNames = new ArrayList<String>();
+			 
+			//model.addRow(new Object[] { "Arial" });
+			//model.addRow(new Object[] { "Tahoma" });
+			SortableTable table = new SortableTable(model);
+		 
+			table.getColumnModel().getColumn(0)
+					.setCellEditor(new TextFieldCellEditor(String.class) {
+						private static final long serialVersionUID = 2023654568542192380L;
+
+						@Override
+						protected JTextField createTextField() {
+							JTextField cellEditorTextField = new JTextField();
+							ListDataIntelliHints fontIntellihints = new ListDataIntelliHints<String>(
+									cellEditorTextField, fontNames);
+							fontIntellihints.setCaseSensitive(false);
+							return cellEditorTextField;
+						}
+					});
+			table.setPreferredScrollableViewportSize(new Dimension(100, 100));
+			  scrollPane.getViewport().add(table);
+			scrollPane.add(table);
+			return scrollPane;
+			//jPanel0.add(new JScrollPane(table),BorderLayout.CENTER );
+		}
+
+		@Override
+		public JPanel createChildPanel(int id) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public JPanel createChildPanel(String id) {
+			// TODO Auto-generated method stub
+			return null;
 		}
 }
